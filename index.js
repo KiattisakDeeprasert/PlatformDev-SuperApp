@@ -9,14 +9,14 @@ const program = new Command();
 
 const defaultPorts = {
   auth: 8080,
-  gem_cars: 8081,
+  sport_complex: 8081,
   library: 8082,
   admin: 3000,
   user: 3001,
   shared: 3002,
 };
 
-const backend = ['auth', 'gem_cars','library']
+const backend = ['auth', 'sport_complex','library']
 
 // Function to create .env files with user-defined or default ports and MongoDB URIs
 async function createEnvFiles() {
@@ -126,8 +126,8 @@ const services = {
     command: 'cd backend/auth && go run cmd/main.go',
     port: 8080
   },
-  gem_cars: {
-    command: 'cd backend/gem_cars && pnpm run start:dev',
+  sport_complex: {
+    command: 'cd backend/sport_complex && pnpm run start:dev',
     port: 8081
   },
   library: {
@@ -156,7 +156,7 @@ program
     await createEnvFiles();
     const setupCommands = [
       'cd backend/auth && go get ./...',
-      'cd backend/gem_cars && pnpm install',
+      'cd backend/sport_complex && pnpm install',
       'cd frontend/admin && pnpm install',
       'cd frontend/user && pnpm install',
       'cd frontend/shared && pnpm install',
@@ -181,7 +181,7 @@ program
   .action(async () => {
     const setupCommands = [
       'cd backend/auth && go get ./...',
-      'cd backend/gem_cars && pnpm install',
+      'cd backend/sport_complex && pnpm install',
       'cd backend/library && pnpm install',
       'cd frontend/admin && pnpm install',
       'cd frontend/user && pnpm install',
