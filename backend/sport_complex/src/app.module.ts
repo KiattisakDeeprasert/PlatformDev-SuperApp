@@ -1,15 +1,20 @@
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
+import { MulterModule } from '@nestjs/platform-express';
 import { AppService } from './app.service';
 import { ServeStaticModule } from '@nestjs/serve-static';
-import { MulterModule } from '@nestjs/platform-express';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
-import { TypeFacilitiesModule } from './type-facilities/type-facilities.module';
 import configuration from './app/config/configuration';
 import { storageConfig } from './app/config/storage.config';
 import { join } from 'path';
-import { CourtsModule } from './courts/courts.module';
+import { FieldsModule } from './fields/fields.module';
+import { UsersModule } from './users/users.module';
+import { TimeSlotsModule } from './time-slots/time-slots.module';
+import { PaymentsModule } from './payments/payments.module';
+import { ReservationsModule } from './reservations/reservations.module';
+import { FieldTimeSlotsModule } from './field-time-slots/field-time-slots.module';
+import { TypeSportsModule } from './type-sports/type-sports.module';
 
 @Module({
   imports: [
@@ -34,9 +39,14 @@ import { CourtsModule } from './courts/courts.module';
         },
       ],
     }),
-    MulterModule.register({ storage: storageConfig }),
-    TypeFacilitiesModule,
-    CourtsModule,
+    MulterModule.register({storage:storageConfig}),
+    FieldsModule,
+    UsersModule,
+    TimeSlotsModule,
+    PaymentsModule,
+    ReservationsModule,
+    TypeSportsModule,
+    FieldTimeSlotsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

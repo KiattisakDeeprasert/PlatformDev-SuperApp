@@ -1,5 +1,5 @@
 {
-  "name": "gem_cars",
+  "name": "sport_complex",
   "version": "0.0.1",
   "description": "",
   "author": "",
@@ -25,15 +25,17 @@
     "@nestjs/core": "^10.0.0",
     "@nestjs/mapped-types": "*",
     "@nestjs/mongoose": "^10.0.10",
-    "@nestjs/platform-express": "^10.0.0",
+    "@nestjs/platform-express": "^10.4.5",
     "@nestjs/serve-static": "^4.0.2",
+    "bcrypt": "^5.1.1",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.1",
     "gem_cars": "file:",
     "mongodb": "^6.9.0",
     "mongoose": "^8.5.3",
     "reflect-metadata": "^0.2.0",
-    "rxjs": "^7.8.1"
+    "rxjs": "^7.8.1",
+    "sport_complex": "file:"
   },
   "devDependencies": {
     "@nestjs/cli": "^10.0.0",

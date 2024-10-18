@@ -9,16 +9,21 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.AppModule = void 0;
 const common_1 = require("@nestjs/common");
 const app_controller_1 = require("./app.controller");
+const platform_express_1 = require("@nestjs/platform-express");
 const app_service_1 = require("./app.service");
 const serve_static_1 = require("@nestjs/serve-static");
-const platform_express_1 = require("@nestjs/platform-express");
 const config_1 = require("@nestjs/config");
 const mongoose_1 = require("@nestjs/mongoose");
-const type_facilities_module_1 = require("./type-facilities/type-facilities.module");
 const configuration_1 = require("./app/config/configuration");
 const storage_config_1 = require("./app/config/storage.config");
 const path_1 = require("path");
-const courts_module_1 = require("./courts/courts.module");
+const fields_module_1 = require("./fields/fields.module");
+const users_module_1 = require("./users/users.module");
+const time_slots_module_1 = require("./time-slots/time-slots.module");
+const payments_module_1 = require("./payments/payments.module");
+const reservations_module_1 = require("./reservations/reservations.module");
+const field_time_slots_module_1 = require("./field-time-slots/field-time-slots.module");
+const type_sports_module_1 = require("./type-sports/type-sports.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -47,8 +52,13 @@ exports.AppModule = AppModule = __decorate([
                 ],
             }),
             platform_express_1.MulterModule.register({ storage: storage_config_1.storageConfig }),
-            type_facilities_module_1.TypeFacilitiesModule,
-            courts_module_1.CourtsModule,
+            fields_module_1.FieldsModule,
+            users_module_1.UsersModule,
+            time_slots_module_1.TimeSlotsModule,
+            payments_module_1.PaymentsModule,
+            reservations_module_1.ReservationsModule,
+            type_sports_module_1.TypeSportsModule,
+            field_time_slots_module_1.FieldTimeSlotsModule,
         ],
         controllers: [app_controller_1.AppController],
         providers: [app_service_1.AppService],
