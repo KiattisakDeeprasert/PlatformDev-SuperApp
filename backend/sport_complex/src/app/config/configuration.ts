@@ -4,5 +4,5 @@ export default () => ({
     apiPath: process.env.UPLOAD_API_PATH || "/uploads",
   },
   port: parseInt(process.env.PORT, 10) || 8081,
-  database: process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/sport_complex-db',
+  database: process.env.MONGO_URI || 'mongodb+srv://admin:user1234@cluster0.35bsc.mongodb.net/sport_complex-db',
 });
