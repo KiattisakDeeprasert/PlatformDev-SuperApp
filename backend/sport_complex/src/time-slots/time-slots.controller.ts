@@ -1,9 +1,10 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, HttpStatus, Put } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, HttpStatus, Put, UseInterceptors, ClassSerializerInterceptor } from '@nestjs/common';
 import { TimeslotsService } from './time-slots.service';
 import { CreateTimeSlotDto } from './dto/create-time-slot.dto';
 import { UpdateTimeSlotDto } from './dto/update-time-slot.dto';
 import { createResponse, MessageBuilder, ResponseMethod } from 'src/app/common/utils/response.util';
 import { TimeslotEntity } from './entities/time-slot.entity';
+
 
 @Controller('time-slots')
 export class TimeslotsController {
@@ -11,6 +12,7 @@ export class TimeslotsController {
 
   constructor(private readonly timeSlotsService: TimeslotsService) {}
 
+  @UseInterceptors(ClassSerializerInterceptor)
   @Post()
   async create(@Body() createTimeslotDto: CreateTimeSlotDto) {
     const timeslot = await this.timeSlotsService.create(createTimeslotDto);
@@ -20,7 +22,7 @@ export class TimeslotsController {
       new TimeslotEntity(timeslot)
     );
   }
-  
+  @UseInterceptors(ClassSerializerInterceptor)
   @Get()
   async findAll() {
     const timeslots = await this.timeSlotsService.findAll();
@@ -30,7 +32,8 @@ export class TimeslotsController {
       timeslots.map((timeslot) => new TimeslotEntity(timeslot))
     );
   }
-
+  
+  @UseInterceptors(ClassSerializerInterceptor)
   @Get(":id")
   async findOne(@Param("id") id: string) {
     const timeslot = await this.timeSlotsService.findOne(id);
@@ -41,6 +44,7 @@ export class TimeslotsController {
     );
   }
 
+  @UseInterceptors(ClassSerializerInterceptor)
   @Patch(":id")
   async update(
     @Param("id") id: string,
@@ -54,6 +58,7 @@ export class TimeslotsController {
     );
   }
 
+  @UseInterceptors(ClassSerializerInterceptor)
   @Delete(":id")
   async remove(@Param("id") id: string) {
     const timeslot = await this.timeSlotsService.remove(id);

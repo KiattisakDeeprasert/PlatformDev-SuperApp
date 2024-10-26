@@ -10,24 +10,24 @@ import {
   ErrorMethod,
   RequestAction,
 } from "src/app/common/utils/error.util";
-import { TypeSport } from "./schemas/type-sport.schemas";
-import { CreateTypeSportDto } from "./dto/create-type-sport.dto";
-import { UpdateTypeSportDto } from "./dto/update-type-sport.dto";
+import { Sport } from "./schemas/sport.schemas";
+import { CreateSportDto } from "./dto/create-sport.dto";
+import { UpdateSportDto } from "./dto/update-sport.dto";
 
 @Injectable()
-export class TypeSportsService {
-  private readonly errorBuilder = new ErrorBuilder("Type-sports");
+export class SportsService {
+  private readonly errorBuilder = new ErrorBuilder("Sport");
 
   constructor(
-    @InjectModel(TypeSport.name)
-    private readonly typeSportModel: Model<TypeSport>
+    @InjectModel(Sport.name)
+    private readonly sportModel: Model<Sport>
   ) {}
 
-  async create(createTypeSportDto: CreateTypeSportDto): Promise<TypeSport> {
+  async create(createSportDto: CreateSportDto): Promise<Sport> {
     try {
-      const typeSportDoc = new this.typeSportModel(createTypeSportDto);
-      const typeSport = await typeSportDoc.save();
-      return typeSport.toObject();
+      const SportDoc = new this.sportModel(createSportDto);
+      const sport = await SportDoc.save();
+      return sport.toObject();
     } catch (error) {
       if (error.code === 11000) {
         throw new ConflictException(
@@ -39,20 +39,20 @@ export class TypeSportsService {
     }
   }
 
-  async findAll(): Promise<TypeSport[]> {
-    const typeSport = await this.typeSportModel.find().lean();
-    return typeSport;
+  async findAll(): Promise<Sport[]> {
+    const sport = await this.sportModel.find().lean();
+    return sport;
   }
 
-  async findOne(id: string): Promise<TypeSport> {
+  async findOne(id: string): Promise<Sport> {
     try {
-      const typeSport = await this.typeSportModel.findById(id).lean();
-      if (!typeSport) {
+      const sport = await this.sportModel.findById(id).lean();
+      if (!sport) {
         throw new NotFoundException(
           this.errorBuilder.build(ErrorMethod.notFound, { id })
         );
       }
-      return typeSport;
+      return sport;
     } catch (error) {
       throw error;
     }
@@ -60,9 +60,9 @@ export class TypeSportsService {
 
   async update(
     id: string,
-    updateTypeSportDto: UpdateTypeSportDto
-  ): Promise<TypeSport> {
-    const exists = await this.typeSportModel.exists({ _id: id });
+    updateSportDto: UpdateSportDto
+  ): Promise<Sport> {
+    const exists = await this.sportModel.exists({ _id: id });
     try {
       if (!exists) {
         throw new NotFoundException(
@@ -70,10 +70,10 @@ export class TypeSportsService {
         );
       }
       const options = { new: true };
-      const typeSport = await this.typeSportModel
-        .findByIdAndUpdate(id, updateTypeSportDto, options)
+      const sport = await this.sportModel
+        .findByIdAndUpdate(id, updateSportDto, options)
         .lean();
-      return typeSport;
+      return sport;
     } catch (error) {
       if (error.code === 11000) {
         throw new ConflictException(
@@ -86,13 +86,13 @@ export class TypeSportsService {
     }
   }
 
-  async remove(id: string): Promise<TypeSport> {
-    const typeSport = await this.typeSportModel.findByIdAndDelete(id).lean();
-    if (!typeSport) {
+  async remove(id: string): Promise<Sport> {
+    const sport = await this.sportModel.findByIdAndDelete(id).lean();
+    if (!sport) {
       throw new NotFoundException(
         this.errorBuilder.build(ErrorMethod.notFound, { id })
       );
     }
-    return typeSport;
+    return sport;
   }
 }

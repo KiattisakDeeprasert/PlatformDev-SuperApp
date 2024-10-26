@@ -1,8 +1,8 @@
 import { MongoEntity } from "src/app/common/lib/mongo.entiy";
-export class TypeSportEntity extends MongoEntity {
+export class SportEntity extends MongoEntity {
   name: { th: string; en: string };
 
-  constructor(partial: Partial<TypeSportEntity>) {
+  constructor(partial: Partial<SportEntity>) {
     super();
     Object.assign(this, partial);
   }

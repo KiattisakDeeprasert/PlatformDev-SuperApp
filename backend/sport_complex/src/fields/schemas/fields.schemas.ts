@@ -1,6 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, SchemaTypes, Types } from 'mongoose';
-import { TypeSport } from 'src/type-sports/schemas/type-sport.schemas';
+import { Sport } from 'src/sports/schemas/sport.schemas';
 
 export type FieldsDocument = HydratedDocument<Field>;
 @Schema()
@@ -11,7 +11,7 @@ export class Field {
   @Prop({ type: SchemaTypes.ObjectId,
     ref: "TypeSport",
     required: true, })
-    type: TypeSport | Types.ObjectId
+    type: Sport | Types.ObjectId
 
   @Prop({ type: String, required: true })
   status: string;

@@ -12,6 +12,6 @@ import { Timeslot, TimeslotSchema } from './schemas/time-slots.schema';
   ],
   controllers: [TimeslotsController],
   providers: [TimeslotsService],
-  //exports: [MongooseModule],
+  exports: [MongooseModule],
 })
 export class TimeSlotsModule {}

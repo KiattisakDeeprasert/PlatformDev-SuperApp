@@ -27,7 +27,7 @@ export class FieldsController {
 
   constructor(private readonly fieldsService: FieldsService) {}
 
-  //@UseInterceptors(ClassSerializerInterceptor)
+  @UseInterceptors(ClassSerializerInterceptor)
   @Post()
   async create(@Body() createFieldDto: CreateFieldDto) {
     const field = await this.fieldsService.create(createFieldDto);
@@ -41,7 +41,7 @@ export class FieldsController {
     );
   }
 
-  //@UseInterceptors(ClassSerializerInterceptor)
+  @UseInterceptors(ClassSerializerInterceptor)
   @Get()
   async findAll() {
     const fields = await this.fieldsService.findAll();
@@ -57,7 +57,7 @@ export class FieldsController {
     );
   }
 
-  //@UseInterceptors(ClassSerializerInterceptor)
+  @UseInterceptors(ClassSerializerInterceptor)
   @Get(":id")
   async findOne(@Param("id") id: string) {
     const field = await this.fieldsService.findOne(id);
@@ -71,7 +71,7 @@ export class FieldsController {
     );
   }
 
-  //@UseInterceptors(ClassSerializerInterceptor)
+  @UseInterceptors(ClassSerializerInterceptor)
   @Patch(":id")
   async update(@Param("id") id: string, @Body() updateFieldDto: UpdateFieldDto) {
     const field = await this.fieldsService.update(id, updateFieldDto);
@@ -85,7 +85,7 @@ export class FieldsController {
     );
   }
 
-  //@UseInterceptors(ClassSerializerInterceptor)
+  @UseInterceptors(ClassSerializerInterceptor)
   @Delete(":id")
   async remove(@Param("id") id: string) {
     const field = await this.fieldsService.remove(id);

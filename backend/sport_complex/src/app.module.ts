@@ -14,7 +14,8 @@ import { TimeSlotsModule } from './time-slots/time-slots.module';
 import { PaymentsModule } from './payments/payments.module';
 import { ReservationsModule } from './reservations/reservations.module';
 import { FieldTimeSlotsModule } from './field-time-slots/field-time-slots.module';
-import { TypeSportsModule } from './type-sports/type-sports.module';
+import { AuthModule } from './auth/auth.module';
+import { SportsModule } from './sports/sports.module';
 
 @Module({
   imports: [
@@ -45,8 +46,9 @@ import { TypeSportsModule } from './type-sports/type-sports.module';
     TimeSlotsModule,
     PaymentsModule,
     ReservationsModule,
-    TypeSportsModule,
     FieldTimeSlotsModule,
+    AuthModule,
+    SportsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

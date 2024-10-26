@@ -3,7 +3,7 @@ import { IsObject, ValidateNested } from "class-validator";
 import { nameDTO } from "./name.dto";
 
 
-export class CreateTypeSportDto {
+export class CreateSportDto {
     @IsObject()
     @ValidateNested()
     @Type(() => nameDTO)
