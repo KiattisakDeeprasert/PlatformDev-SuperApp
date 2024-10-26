@@ -1,5 +1,5 @@
 "use client";
-import ConfirmDialog from "@/components/Sport/Confirmdialog";
+import ConfirmDialog from "@/components/Default/Confirmdialog";
 import SportForm from "@/components/Sport/SportForm";
 import SportTable from "@/components/Sport/SportTable";
 import { Sport } from "@/utils/SportTypes";
@@ -28,14 +28,10 @@ export default function TimeSlotPage() {
   const { addAlert } = useGlobalContext();
   const [sports, setSports] = useState<Sport[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-  const [selectedSport, setSelectedSport] = useState<Sport | null>(
-    null
-  );
+  const [selectedSport, setSelectedSport] = useState<Sport | null>(null);
   const [isFormOpen, setIsFormOpen] = useState<boolean>(false);
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
-  const [sportIdToDelete, setSportIdToDelete] = useState<string | null>(
-    null
-  );
+  const [sportIdToDelete, setSportIdToDelete] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -70,46 +66,32 @@ export default function TimeSlotPage() {
   };
 
   const handleEdit = (sport: Sport) => {
-      setSelectedSport(sport);
-      setIsFormOpen(true);
+    setSelectedSport(sport);
+    setIsFormOpen(true);
   };
 
   const confirmDelete = (sportId: string) => {
-    if (sportId) {
-      setSportIdToDelete(sportId); 
-      setIsConfirmDialogOpen(true);
-    }
+    setSportIdToDelete(sportId);
+    setIsConfirmDialogOpen(true);
   };
+
+  const handleDelete = async () => {
+    if (!sportIdToDelete) return;
   
-
-  const handleDelete = async (id: string) => {
     try {
-      const url = `${apiUrl}/${id}`; 
-
-      const response = await fetch(url, {
+      const response = await fetch(`${apiUrl}/${sportIdToDelete}`, {
         method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-        },
       });
-
       if (!response.ok) {
-        throw new Error("Failed to delete sport");
+        throw new Error("Failed to delete Sport");
       }
-
-      // Remove the deleted timeslot from the state
-      setSports((prevSports) =>
-        prevSports.filter((t) => t.id !== id)
-      );
-
-      handleAddAlert(
-        "ExclamationCircleIcon",
-        "Success",
-        "Sport deleted successfully",
-        tAlertType.SUCCESS
-      );
+      setSports(sports.filter((t) => t.id !== sportIdToDelete));
+      handleAddAlert("ExclamationCircleIcon", "Success", "Sport deleted successfully", tAlertType.SUCCESS);
     } catch (error) {
-      console.error("Error deleting sport:", error);
+      console.log(error);
+    } finally {
+      setIsConfirmDialogOpen(false);
+      setSportIdToDelete(null);
     }
   };
 
@@ -117,7 +99,7 @@ export default function TimeSlotPage() {
     try {
       const url = sport.id ? `${apiUrl}/${sport.id}` : apiUrl;
       const method = sport.id ? "PATCH" : "POST";
-  
+
       const response = await fetch(url, {
         method,
         headers: {
@@ -125,20 +107,20 @@ export default function TimeSlotPage() {
         },
         body: JSON.stringify(sport),
       });
-  
+
       if (!response.ok) {
         throw new Error(
           sport.id ? "Failed to update sport" : "Failed to create sport"
         );
       }
-  
+
       const result = await response.json();
       if (sport.id) {
         // Update the existing timeslot
         setSports((prevSports) =>
           prevSports.map((t) => (t.id === result.data.id ? result.data : t))
         );
-  
+
         handleAddAlert(
           "ExclamationCircleIcon",
           "Success",
@@ -148,7 +130,7 @@ export default function TimeSlotPage() {
       } else {
         // Add the new timeslot
         setSports((prevSports) => [...prevSports, result.data]);
-  
+
         handleAddAlert(
           "ExclamationCircleIcon",
           "Success",
@@ -156,8 +138,8 @@ export default function TimeSlotPage() {
           tAlertType.SUCCESS
         );
       }
-  
-      setIsFormOpen(false); // Close the form
+
+      setIsFormOpen(false);
       setSelectedSport(null);
     } catch (error) {
       console.error(
@@ -166,9 +148,6 @@ export default function TimeSlotPage() {
       );
     }
   };
-  
-
-  
 
   if (loading) {
     return <div>Loading...</div>;
@@ -208,10 +187,9 @@ export default function TimeSlotPage() {
       </div>
       <ConfirmDialog
         isOpen={isConfirmDialogOpen}
-        onConfirm={handleDelete} 
+        onConfirm={handleDelete}
         onClose={() => setIsConfirmDialogOpen(false)}
         message="Are you sure you want to delete this sport?"
-        id={sportIdToDelete!} 
       />
     </div>
   );

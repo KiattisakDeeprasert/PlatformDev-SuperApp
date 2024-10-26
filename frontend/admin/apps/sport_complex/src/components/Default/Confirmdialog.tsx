@@ -2,10 +2,9 @@ import Modal from "@shared/components/Modal";
 
 interface ConfirmDialogProps {
   isOpen: boolean;
-  onConfirm: (id: string) => void;
+  onConfirm: () => void;
   onClose: () => void;
   message: string;
-  id: string
 }
 
 export default function ConfirmDialog({
@@ -13,7 +12,6 @@ export default function ConfirmDialog({
   onConfirm,
   onClose,
   message,
-  id
 }: ConfirmDialogProps) {
   return (
     <Modal
@@ -23,7 +21,7 @@ export default function ConfirmDialog({
       actions={
         <div className="flex justify-between">
           <button
-            onClick={() => onConfirm(id)}
+            onClick={onConfirm}
             className="bg-black text-white px-2 py-2 rounded-full"
           >
             Confirm

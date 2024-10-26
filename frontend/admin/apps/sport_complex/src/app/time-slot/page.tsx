@@ -1,5 +1,6 @@
 "use client";
-import ConfirmDialog from "@/components/Timeslot/Confirmdialog";
+
+import ConfirmDialog from "@/components/Default/Confirmdialog";
 import TimeslotForm from "@/components/Timeslot/TimeslotForm";
 import TimeslotTable from "@/components/Timeslot/TimeslotTable";
 import { Timeslot } from "@/utils/TimeSlotTypes";
@@ -85,41 +86,23 @@ export default function TimeSlotPage() {
     }
   };
   
-
-  const handleDelete = async (id: string) => {
-    // Ensure the ID is valid before proceeding
-    if (!id) {
-      console.error("Invalid timeslot ID for deletion");
-      return; // Exit if ID is not valid
-    }
-
+  const handleDelete = async () => {
+    if (!timeslotIdToDelete) return;
+  
     try {
-      const url = `${apiUrl}/${id}`; // Construct the URL for the DELETE request
-
-      const response = await fetch(url, {
-        method: "DELETE", // Use DELETE method
-        headers: {
-          "Content-Type": "application/json",
-        },
+      const response = await fetch(`${apiUrl}/${timeslotIdToDelete}`, {
+        method: "DELETE",
       });
-
       if (!response.ok) {
-        throw new Error("Failed to delete timeslot");
+        throw new Error("Failed to delete time slots");
       }
-
-      // Remove the deleted timeslot from the state
-      setTimeslots((prevTimeslots) =>
-        prevTimeslots.filter((t) => t.id !== id)
-      );
-
-      handleAddAlert(
-        "ExclamationCircleIcon",
-        "Success",
-        "Timeslot deleted successfully",
-        tAlertType.SUCCESS
-      );
+      setTimeslots(timeslots.filter((t) => t.id !== timeslotIdToDelete));
+      handleAddAlert("ExclamationCircleIcon", "Success", "Time slots deleted successfully", tAlertType.SUCCESS);
     } catch (error) {
-      console.error("Error deleting timeslot:", error);
+      console.log(error);
+    } finally {
+      setIsConfirmDialogOpen(false);
+      setTimeslotIdToDelete(null);
     }
   };
 
@@ -218,10 +201,9 @@ export default function TimeSlotPage() {
       </div>
       <ConfirmDialog
         isOpen={isConfirmDialogOpen}
-        onConfirm={handleDelete} // Pass the handleDelete function
+        onConfirm={handleDelete}
         onClose={() => setIsConfirmDialogOpen(false)}
         message="Are you sure you want to delete this time slot?"
-        id={timeslotIdToDelete!} // Pass the ID, ensuring it's defined
       />
     </div>
   );
