@@ -1,34 +1,63 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  Request,
+  UseGuards,
+  Res,
+  BadRequestException,
+  HttpStatus,
+  HttpCode,
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { CreateAuthDto } from './dto/create-auth.dto';
-import { UpdateAuthDto } from './dto/update-auth.dto';
+import { LocalAuthGuard } from './guards/local-auth.guard';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  @Post()
-  create(@Body() createAuthDto: CreateAuthDto) {
-    return this.authService.create(createAuthDto);
+  @UseGuards(LocalAuthGuard)
+  @Post('/login')
+  async login(@Request() req, @Res({ passthrough: true }) res) {
+    const { accessToken } = await this.authService.login(req.user);
+    // save cookie here
+    res.cookie('access_token', accessToken, {
+      httpOnly: true,
+    });
+    return {
+      message: 'Login successful',
+    };
   }
 
-  @Get()
-  findAll() {
-    return this.authService.findAll();
+  @Post('refresh')
+  async refresh(@Request() req) {
+    return this.authService.refreshToken(req.user);
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.authService.findOne(+id);
+  @Post('reset-password')
+  async resetPassword(@Body() resetPasswordDto: ResetPasswordDto) {
+    const { username, email, newPassword } = resetPasswordDto;
+
+    if (!username || !email || !newPassword) {
+      throw new BadRequestException(
+        'Username, email, and new password are required',
+      );
+    }
+
+    return await this.authService.resetPassword(username, email, newPassword);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateAuthDto: UpdateAuthDto) {
-    return this.authService.update(+id, updateAuthDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.authService.remove(+id);
+  @Post('logout')
+  async logout(@Res({ passthrough: true }) res) {
+    // Clear the access token cookie
+    res.clearCookie('access_token', { httpOnly: true });
+    return {
+      message: 'Logout successful',
+    };
   }
 }

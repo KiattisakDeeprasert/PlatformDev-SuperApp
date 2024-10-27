@@ -71,24 +71,24 @@ export default function TimeSlotPage() {
   };
 
   const handleEdit = (timeslot: Timeslot) => {
-      console.log("Editing timeslot:", timeslot);
-      setSelectedTimeslot(timeslot);
-      setIsFormOpen(true);
+    console.log("Editing timeslot:", timeslot);
+    setSelectedTimeslot(timeslot);
+    setIsFormOpen(true);
   };
 
   const confirmDelete = (timeslotId: string) => {
     if (timeslotId) {
       console.log("Confirming delete for timeslot ID:", timeslotId);
-      setTimeslotIdToDelete(timeslotId); 
+      setTimeslotIdToDelete(timeslotId);
       setIsConfirmDialogOpen(true);
     } else {
       console.error("Invalid timeslot ID for deletion:", timeslotId);
     }
   };
-  
+
   const handleDelete = async () => {
     if (!timeslotIdToDelete) return;
-  
+
     try {
       const response = await fetch(`${apiUrl}/${timeslotIdToDelete}`, {
         method: "DELETE",
@@ -97,7 +97,12 @@ export default function TimeSlotPage() {
         throw new Error("Failed to delete time slots");
       }
       setTimeslots(timeslots.filter((t) => t.id !== timeslotIdToDelete));
-      handleAddAlert("ExclamationCircleIcon", "Success", "Time slots deleted successfully", tAlertType.SUCCESS);
+      handleAddAlert(
+        "ExclamationCircleIcon",
+        "Success",
+        "Time slots deleted successfully",
+        tAlertType.SUCCESS
+      );
     } catch (error) {
       console.log(error);
     } finally {
@@ -110,7 +115,7 @@ export default function TimeSlotPage() {
     try {
       const url = timeslot.id ? `${apiUrl}/${timeslot.id}` : apiUrl;
       const method = timeslot.id ? "PATCH" : "POST";
-  
+
       const response = await fetch(url, {
         method,
         headers: {
@@ -118,20 +123,22 @@ export default function TimeSlotPage() {
         },
         body: JSON.stringify(timeslot),
       });
-  
+
       if (!response.ok) {
         throw new Error(
-          timeslot.id ? "Failed to update timeslot" : "Failed to create timeslot"
+          timeslot.id
+            ? "Failed to update timeslot"
+            : "Failed to create timeslot"
         );
       }
-  
+
       const result = await response.json();
       if (timeslot.id) {
         // Update the existing timeslot
         setTimeslots((prevTimeslots) =>
           prevTimeslots.map((t) => (t.id === result.data.id ? result.data : t))
         );
-  
+
         handleAddAlert(
           "ExclamationCircleIcon",
           "Success",
@@ -141,7 +148,7 @@ export default function TimeSlotPage() {
       } else {
         // Add the new timeslot
         setTimeslots((prevTimeslots) => [...prevTimeslots, result.data]);
-  
+
         handleAddAlert(
           "ExclamationCircleIcon",
           "Success",
@@ -149,7 +156,7 @@ export default function TimeSlotPage() {
           tAlertType.SUCCESS
         );
       }
-  
+
       setIsFormOpen(false); // Close the form
       setSelectedTimeslot(null); // Clear the selected timeslot
     } catch (error) {
@@ -159,9 +166,6 @@ export default function TimeSlotPage() {
       );
     }
   };
-  
-
-  
 
   if (loading) {
     return <div>Loading...</div>;
