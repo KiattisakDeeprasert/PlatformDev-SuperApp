@@ -3,6 +3,7 @@ import {
     IsMongoId,
     IsNotEmpty,
     IsNumber,
+    IsOptional,
     IsString,
   } from "class-validator";
 import { FieldStatus } from "../enums/field-status.enum";
@@ -11,6 +12,7 @@ import { FieldStatus } from "../enums/field-status.enum";
     @IsNumber()
     capacity: number;
   
+    @IsOptional()
     @IsString()
     @IsIn([FieldStatus.ready, FieldStatus.not_ready])
     status: FieldStatus;
@@ -18,4 +20,8 @@ import { FieldStatus } from "../enums/field-status.enum";
     @IsMongoId()
     @IsNotEmpty()
     type: string;
+
+    @IsNotEmpty()
+    @IsNumber()
+    price: number
   }

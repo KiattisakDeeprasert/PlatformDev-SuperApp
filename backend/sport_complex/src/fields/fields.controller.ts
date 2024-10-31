@@ -23,7 +23,7 @@ import { FieldStatus } from "./enums/field-status.enum";
 
 @Controller("fields")
 export class FieldsController {
-  private readonly messageBuilder = new MessageBuilder("Fields");
+  private readonly messageBuilder = new MessageBuilder("Field");
 
   constructor(private readonly fieldsService: FieldsService) {}
 

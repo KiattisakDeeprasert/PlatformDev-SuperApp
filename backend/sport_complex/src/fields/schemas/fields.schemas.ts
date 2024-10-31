@@ -9,12 +9,15 @@ export class Field {
   capacity: number;
 
   @Prop({ type: SchemaTypes.ObjectId,
-    ref: "TypeSport",
+    ref: "Sport",
     required: true, })
     type: Sport | Types.ObjectId
 
-  @Prop({ type: String, required: true })
+  @Prop({ type: String, default: "ready" })
   status: string;
+
+  @Prop({ type: Number, required: true })
+  price: number;
 }
 export const FieldSchema = SchemaFactory.createForClass(Field);
 FieldSchema.index({ field: 1, type: 1 }, { unique: true });

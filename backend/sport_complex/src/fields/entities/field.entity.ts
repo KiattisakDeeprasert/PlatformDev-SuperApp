@@ -14,6 +14,8 @@ export class FieldEntity extends MongoEntity {
   @TransformId((v) => new SportEntity(v))
   type: Types.ObjectId | Sport | null;
 
+  price: number
+  
   constructor(partial: Partial<FieldEntity>) {
     super();
     Object.assign(this, partial);
