@@ -13,10 +13,11 @@ import {
 import { CreateReservationDto } from "./dto/create-reservation.dto";
 import { UpdateReservationDto } from "./dto/update-reservation.dto";
 import { reservationType } from "./enums/reservation.enum";
-import { Field } from "src/fields/schemas/fields.schemas";
 import { Reservation } from "./schemas/reservation.schemas";
 import { FieldTimeSlot } from "src/field-time-slots/schemas/field-time-slot.schemas";
 import { FieldTimeSlotStatus } from "src/field-time-slots/enums/field-time-slot.enum";
+import { PaymentsService } from "src/payments/payments.service";
+import { PaymentStatus } from "src/payments/enums/payment.enum";
 
 const POPULATE_PIPE = [
   {
@@ -44,45 +45,31 @@ export class ReservationsService {
   constructor(
     @InjectModel(Reservation.name)
     private readonly reservationModel: Model<Reservation>,
-    @InjectModel(Field.name)
-    private readonly fieldModel: Model<Field>,
     @InjectModel(FieldTimeSlot.name)
-    private readonly fieldTimeSlotModel: Model<FieldTimeSlot>
+    private readonly fieldTimeSlotModel: Model<FieldTimeSlot>,
+    private readonly paymentsService: PaymentsService
   ) {}
 
   // 1. Create reservation with default "pending" status
-  async create(
-    createReservationDto: CreateReservationDto
-  ): Promise<Reservation> {
+  async create(createReservationDto: CreateReservationDto): Promise<Reservation> {
     try {
-      // Set default reservation type to "pending"
+      // set type reservation is "pending" default
       createReservationDto.type = reservationType.pending;
-
-      // Find the FieldTimeSlot and update its status to "reserved"
-      const { field, timeSlot } = createReservationDto;
-      const fieldTimeSlot = await this.fieldTimeSlotModel
-        .findOne({ field, timeSlot })
-        .populate("timeSlot");
-
-      if (!fieldTimeSlot) {
-        throw new NotFoundException("FieldTimeSlot not found");
-      }
-
-      if (fieldTimeSlot.status !== FieldTimeSlotStatus.free) {
-        throw new ConflictException("FieldTimeSlot is not available");
-      }
-
-      // Update FieldTimeSlot status to "reserved"
-      fieldTimeSlot.status = FieldTimeSlotStatus.reserved;
-      await fieldTimeSlot.save();
-
-      // Create and save the reservation
+  
+      // create & record reservation data
       const reservationDoc = new this.reservationModel(createReservationDto);
       const reservation = await reservationDoc.save();
-
-      // You can uncomment the scheduling if needed
-      // this.scheduleTimeout(reservation.id, field, timeSlot);
-
+  
+      // create payment in relation reservation
+      const createPaymentDto = {
+        reservation: reservation.id, // relation payment to reservation
+        paymentImage: null,
+        status: PaymentStatus.pending,
+        dateTime: new Date(),
+      };
+  
+      await this.paymentsService.create(createPaymentDto);
+  
       return reservation.toObject();
     } catch (error) {
       if (error.code === 11000) {
@@ -95,6 +82,7 @@ export class ReservationsService {
       throw error;
     }
   }
+  
 
   // Add other methods like findAll, findOne, update, and remove here...
 

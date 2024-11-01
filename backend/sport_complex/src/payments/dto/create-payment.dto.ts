@@ -3,7 +3,6 @@ import {
   IsIn,
   IsMongoId,
   IsNotEmpty,
-  IsNumber,
   IsOptional,
   IsString,
 } from 'class-validator';
@@ -14,10 +13,6 @@ export class CreatePaymentDto {
   @IsNotEmpty()
   @IsMongoId()
   reservation: Types.ObjectId;
-
-  @IsNotEmpty()
-  @IsNumber()
-  amount: number;
 
   @IsOptional()
   paymentImage: any;

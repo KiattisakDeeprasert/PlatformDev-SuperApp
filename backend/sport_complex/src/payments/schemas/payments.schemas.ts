@@ -6,8 +6,6 @@ import { PaymentStatus } from "../enums/payment.enum";
 export type PaymentDocument = HydratedDocument<Payment>;
 @Schema()
 export class Payment {
-  @Prop({ required: true })
-  amount: number;
 
   @Prop({
     type: SchemaTypes.ObjectId,

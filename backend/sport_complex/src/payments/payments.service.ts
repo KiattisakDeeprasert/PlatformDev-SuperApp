@@ -7,15 +7,24 @@ import { Payment } from './schemas/payments.schemas';
 import { Model } from 'mongoose';
 import { Reservation } from 'src/reservations/schemas/reservation.schemas';
 import { PaymentStatus } from './enums/payment.enum';
+import { reservationType } from 'src/reservations/enums/reservation.enum';
+import { FieldTimeSlotStatus } from 'src/field-time-slots/enums/field-time-slot.enum';
+import { FieldTimeSlot } from 'src/field-time-slots/schemas/field-time-slot.schemas';
 
 const POPULATE_PIPE = [
   {
     path: "reservation",
-    select: ["user"],
-    populate: {
-      path: "user",
-      select: ["username"],
-    },
+    select: ["user", "field"],
+    populate: [
+      {
+        path: "user",
+        select: ["username"],
+      },
+      {
+        path: "field",
+        select: ["price"], 
+      },
+    ],
   },
 ];
 
@@ -27,7 +36,9 @@ export class PaymentsService {
     @InjectModel(Payment.name)
     private readonly paymentModel: Model<Payment>,
     @InjectModel(Reservation.name)
-    private readonly reservationModel: Model<Reservation>
+    private readonly reservationModel: Model<Reservation>,
+    @InjectModel(FieldTimeSlot.name)
+    private readonly fieldTimeSlotModel: Model<FieldTimeSlot>,
   ) {}
 
   async create(createPaymentDto: CreatePaymentDto): Promise<Payment> {
@@ -72,45 +83,60 @@ export class PaymentsService {
 
   async update(id: string, updatePaymentDto: UpdatePaymentDto): Promise<Payment> {
     const exists = await this.paymentModel.exists({ _id: id });
-
+  
     if (!exists) {
       throw new NotFoundException(
         this.errorBuilder.build(ErrorMethod.notFound, { id })
       );
     }
-
+  
     const payment = await this.paymentModel.findById(id);
     if (!payment) {
       throw new NotFoundException("Payment not found");
     }
-
-    const { status, reservation: reservationId } = updatePaymentDto;
-
-    // Find the reservation
-    const reservation = await this.reservationModel.findById(reservationId);
-    if (!reservation) {
-      throw new NotFoundException("Reservation not found");
-    }
-
-    // Handle status change logic
-    if (status) {
-      if (status === PaymentStatus.completed && payment.status === PaymentStatus.pending) {
-        payment.status = PaymentStatus.completed; // Update payment status
-      } else if (status === PaymentStatus.cancelled && payment.status === PaymentStatus.pending) {
-        payment.status = PaymentStatus.cancelled; // Update payment status to cancelled
-      } else {
-        throw new BadRequestException("Invalid status transition.");
+  
+    const { paymentImage, reservation: reservationId } = updatePaymentDto;
+  
+    // check attach paymentImage
+    if (paymentImage) {
+      // update status payment "completed"
+      payment.status = PaymentStatus.completed;
+      payment.paymentImage = paymentImage;
+      await payment.save();
+  
+      // find reservation
+      const reservation = await this.reservationModel.findById(reservationId);
+      if (!reservation) {
+        throw new NotFoundException("Reservation not found");
       }
+  
+      // update status reservation "confirmed"
+      reservation.type = reservationType.confirmed;
+      await reservation.save();
+  
+      // update status FieldTimeSlot is "reserved"
+      const fieldTimeSlot = await this.fieldTimeSlotModel.findOne({
+        field: reservation.field,
+        timeSlot: reservation.timeSlot,
+      });
+  
+      if (fieldTimeSlot && fieldTimeSlot.status === FieldTimeSlotStatus.free) {
+        fieldTimeSlot.status = FieldTimeSlotStatus.reserved;
+        await fieldTimeSlot.save();
+      }
+    } else {
+      throw new BadRequestException("Payment image is required for completion.");
     }
-
+  
     const updatedPayment = await this.paymentModel.findByIdAndUpdate(
       id,
-      { status: payment.status, ...(reservationId && { reservation: reservationId }) },
+      { status: payment.status, paymentImage: payment.paymentImage },
       { new: true },
     ).lean();
-
+  
     return updatedPayment;
   }
+  
 
   async remove(id: string): Promise<Payment> {
     const payment = await this.paymentModel.findByIdAndDelete(id).lean();
