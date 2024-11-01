@@ -1,4 +1,4 @@
-import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { CreatePaymentDto } from './dto/create-payment.dto';
 import { UpdatePaymentDto } from './dto/update-payment.dto';
 import { ErrorBuilder, ErrorMethod, RequestAction } from 'src/app/common/utils/error.util';
@@ -42,13 +42,23 @@ export class PaymentsService {
   ) {}
 
   async create(createPaymentDto: CreatePaymentDto): Promise<Payment> {
+    // Ensure the DTO is valid before proceeding
+    if (!createPaymentDto.reservation) {
+      throw new BadRequestException('Reservation ID is required to create a payment.');
+    }
+  
     try {
       // Default the status to 'pending'
       createPaymentDto.status = PaymentStatus.pending;
-
+  
+      // Create the payment document
       const paymentDoc = new this.paymentModel(createPaymentDto);
       const payment = await paymentDoc.save();
-      return payment.toObject();
+  
+      // Log the created payment for debugging purposes
+      console.log("Payment created successfully:", payment);
+  
+      return payment.toObject(); // Convert to plain object if needed
     } catch (error) {
       if (error.code === 11000) {
         throw new ConflictException(
@@ -57,9 +67,14 @@ export class PaymentsService {
           }),
         );
       }
-      throw error;
+  
+      // Log unexpected errors for debugging
+      console.error("Error creating payment:", error);
+  
+      throw new InternalServerErrorException('An error occurred while creating the payment.');
     }
   }
+  
 
 
   async findAll(): Promise<Payment[]> {
@@ -83,59 +98,52 @@ export class PaymentsService {
 
   async update(id: string, updatePaymentDto: UpdatePaymentDto): Promise<Payment> {
     const exists = await this.paymentModel.exists({ _id: id });
-  
+    
     if (!exists) {
       throw new NotFoundException(
         this.errorBuilder.build(ErrorMethod.notFound, { id })
       );
     }
-  
+
     const payment = await this.paymentModel.findById(id);
     if (!payment) {
       throw new NotFoundException("Payment not found");
     }
-  
+
     const { paymentImage, reservation: reservationId } = updatePaymentDto;
-  
-    // check attach paymentImage
+
+    // อัปเดตรูปภาพการชำระเงิน
     if (paymentImage) {
-      // update status payment "completed"
-      payment.status = PaymentStatus.completed;
       payment.paymentImage = paymentImage;
-      await payment.save();
-  
-      // find reservation
+      payment.status = PaymentStatus.completed; // เปลี่ยนสถานะเป็น completed
+      await payment.save(); // บันทึกการเปลี่ยนแปลงสถานะ
+    }
+
+    // อัปเดตการจอง
+    if (reservationId) {
       const reservation = await this.reservationModel.findById(reservationId);
       if (!reservation) {
         throw new NotFoundException("Reservation not found");
       }
-  
-      // update status reservation "confirmed"
       reservation.type = reservationType.confirmed;
-      await reservation.save();
-  
-      // update status FieldTimeSlot is "reserved"
+      await reservation.save(); // บันทึกการเปลี่ยนแปลงการจอง
+
+      // อัปเดตสถานะของ FieldTimeSlot
       const fieldTimeSlot = await this.fieldTimeSlotModel.findOne({
         field: reservation.field,
         timeSlot: reservation.timeSlot,
       });
-  
+
       if (fieldTimeSlot && fieldTimeSlot.status === FieldTimeSlotStatus.free) {
         fieldTimeSlot.status = FieldTimeSlotStatus.reserved;
         await fieldTimeSlot.save();
       }
-    } else {
-      throw new BadRequestException("Payment image is required for completion.");
     }
+
+    return await this.paymentModel.findById(id).lean();
+}
+
   
-    const updatedPayment = await this.paymentModel.findByIdAndUpdate(
-      id,
-      { status: payment.status, paymentImage: payment.paymentImage },
-      { new: true },
-    ).lean();
-  
-    return updatedPayment;
-  }
   
 
   async remove(id: string): Promise<Payment> {

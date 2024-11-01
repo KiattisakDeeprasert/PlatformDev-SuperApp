@@ -18,6 +18,7 @@ import { FieldTimeSlot } from "src/field-time-slots/schemas/field-time-slot.sche
 import { FieldTimeSlotStatus } from "src/field-time-slots/enums/field-time-slot.enum";
 import { PaymentsService } from "src/payments/payments.service";
 import { PaymentStatus } from "src/payments/enums/payment.enum";
+import { Timeslot } from "src/time-slots/schemas/time-slots.schema";
 
 const POPULATE_PIPE = [
   {
@@ -62,13 +63,39 @@ export class ReservationsService {
   
       // create payment in relation reservation
       const createPaymentDto = {
-        reservation: reservation.id, // relation payment to reservation
+        reservation: reservation.id, // relation payment to booking
         paymentImage: null,
         status: PaymentStatus.pending,
         dateTime: new Date(),
       };
   
-      await this.paymentsService.create(createPaymentDto);
+      const payment = await this.paymentsService.create(createPaymentDto);
+  
+      // Set a timeout for 30 minutes to cancel the payment and reservation
+      setTimeout(async () => {
+        try {
+          if (!payment._id) {
+            console.error("Payment ID is undefined inside setTimeout.");
+            return;
+          }
+      
+          const existingPayment = await this.paymentsService.findOne(payment._id);
+          if (existingPayment && existingPayment.status === PaymentStatus.pending) {
+            // ดำเนินการเปลี่ยนสถานะของ payment และ reservation
+            existingPayment.status = PaymentStatus.cancelled;
+            await this.paymentsService.update(payment._id, { status: PaymentStatus.cancelled });
+      
+            const reservationToCancel = await this.reservationModel.findById(reservation.id);
+            if (reservationToCancel) {
+              reservationToCancel.type = reservationType.cancelled;
+              await reservationToCancel.save();
+            }
+          }
+        } catch (error) {
+          console.error("Error in setTimeout:", error);
+        }
+      }, 1 * 60 * 1000); // 30 นาที
+      
   
       return reservation.toObject();
     } catch (error) {
@@ -83,76 +110,64 @@ export class ReservationsService {
     }
   }
   
+  
 
   // Add other methods like findAll, findOne, update, and remove here...
 
   // 3 & 4. Update reservation status and FieldTimeSlot accordingly
-  async update(
-    id: string,
-    updateReservationDto: UpdateReservationDto
-  ): Promise<Reservation> {
-    const reservation = await this.reservationModel.findById(id);
+  async update(id: string, updateReservationDto: UpdateReservationDto): Promise<Reservation> {
+    const reservation = await this.reservationModel.findById(id).populate('timeSlot').lean(); // Make sure to populate timeSlot
     if (!reservation) {
-      throw new NotFoundException(`Reservation with id ${id} not found`);
+        throw new NotFoundException(`Reservation with id ${id} not found`);
     }
 
     try {
-      const { type } = updateReservationDto;
-      const { field, timeSlot } = reservation;
+        const { type } = updateReservationDto;
+        const { field, timeSlot } = reservation;
 
-      // Handle status change to "confirmed"
-      if (
-        reservation.type === reservationType.pending &&
-        type === reservationType.confirmed
-      ) {
-        const fieldTimeSlot = await this.fieldTimeSlotModel.findOne({
-          field,
-          timeSlot,
-        });
-        if (fieldTimeSlot.status === FieldTimeSlotStatus.reserved) {
-          fieldTimeSlot.status = FieldTimeSlotStatus.in_use;
-          await fieldTimeSlot.save();
+        // Assert that timeSlot is of type Timeslot after population
+        const populatedTimeSlot = timeSlot as Timeslot;
 
-          // Start a countdown of 1 hour to set FieldTimeSlot back to "free"
-          setTimeout(
-            async () => {
-              fieldTimeSlot.status = FieldTimeSlotStatus.free;
-              await fieldTimeSlot.save();
-              console.log(
-                `FieldTimeSlot for field ${field} and timeSlot ${timeSlot} is now free`
-              );
-            },
-            1 * 60 * 1000 // 1 hour in milliseconds
-          );
+        // Handle reservation status changes
+        if (reservation.type === reservationType.pending && type === reservationType.confirmed) {
+            const fieldTimeSlot = await this.fieldTimeSlotModel.findOne({ field, timeSlot: populatedTimeSlot.id }); // Use populatedTimeSlot._id
+            if (fieldTimeSlot.status === FieldTimeSlotStatus.reserved) {
+                fieldTimeSlot.status = FieldTimeSlotStatus.in_use;
+                await fieldTimeSlot.save();
+
+                // Set timeout to change status back to free
+                const reservationDuration = new Date(populatedTimeSlot.end).getTime() - new Date().getTime();
+                
+                setTimeout(async () => {
+                    fieldTimeSlot.status = FieldTimeSlotStatus.free;
+                    await fieldTimeSlot.save();
+                    console.log(`FieldTimeSlot for field ${field} and timeSlot ${populatedTimeSlot.id} is now free`);
+                }, reservationDuration);
+            }
         }
-      }
 
-      // Handle status change to "cancelled"
-      if (
-        reservation.type === reservationType.pending &&
-        type === reservationType.cancelled
-      ) {
-        const fieldTimeSlot = await this.fieldTimeSlotModel.findOne({
-          field,
-          timeSlot,
-        });
-        if (fieldTimeSlot.status === FieldTimeSlotStatus.reserved) {
-          fieldTimeSlot.status = FieldTimeSlotStatus.free;
-          await fieldTimeSlot.save();
+        if (reservation.type === reservationType.pending && type === reservationType.cancelled) {
+            const fieldTimeSlot = await this.fieldTimeSlotModel.findOne({ field, timeSlot: populatedTimeSlot.id });
+            if (fieldTimeSlot.status === FieldTimeSlotStatus.reserved) {
+                fieldTimeSlot.status = FieldTimeSlotStatus.free;
+                await fieldTimeSlot.save();
+            }
         }
-      }
 
-      const updatedReservation = await this.reservationModel
-        .findByIdAndUpdate(id, updateReservationDto, { new: true })
-        .lean();
-      return updatedReservation;
+        const updatedReservation = await this.reservationModel
+            .findByIdAndUpdate(id, updateReservationDto, { new: true })
+            .lean();
+        return updatedReservation;
     } catch (error) {
-      if (error.code === 11000) {
-        throw new ConflictException("Duplicate data error");
-      }
-      throw error;
+        if (error.code === 11000) {
+            throw new ConflictException("Duplicate data error");
+        }
+        throw error;
     }
-  }
+}
+
+  
+  
   async findAll(): Promise<Reservation[]> {
     const reservations = await this.reservationModel.find().populate(POPULATE_PIPE).lean();
     return reservations;

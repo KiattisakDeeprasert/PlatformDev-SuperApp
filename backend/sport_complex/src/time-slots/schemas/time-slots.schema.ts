@@ -4,6 +4,7 @@ import { HydratedDocument } from 'mongoose';
 export type TimeslotDocument = HydratedDocument<Timeslot>;
 @Schema()
 export class Timeslot {
+  id: string
   @Prop({ type: String, required: true })
   start: string;
 
