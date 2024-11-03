@@ -116,7 +116,7 @@ export class ReservationsService {
 
   // 3 & 4. Update reservation status and FieldTimeSlot accordingly
   async update(id: string, updateReservationDto: UpdateReservationDto): Promise<Reservation> {
-    const reservation = await this.reservationModel.findById(id).populate('timeSlot').lean(); // Make sure to populate timeSlot
+    const reservation = await this.reservationModel.findById(id).populate('timeSlot').lean();
     if (!reservation) {
         throw new NotFoundException(`Reservation with id ${id} not found`);
     }
@@ -125,17 +125,15 @@ export class ReservationsService {
         const { type } = updateReservationDto;
         const { field, timeSlot } = reservation;
 
-        // Assert that timeSlot is of type Timeslot after population
         const populatedTimeSlot = timeSlot as Timeslot;
 
         // Handle reservation status changes
         if (reservation.type === reservationType.pending && type === reservationType.confirmed) {
-            const fieldTimeSlot = await this.fieldTimeSlotModel.findOne({ field, timeSlot: populatedTimeSlot.id }); // Use populatedTimeSlot._id
+            const fieldTimeSlot = await this.fieldTimeSlotModel.findOne({ field, timeSlot: populatedTimeSlot.id });
             if (fieldTimeSlot.status === FieldTimeSlotStatus.reserved) {
                 fieldTimeSlot.status = FieldTimeSlotStatus.in_use;
                 await fieldTimeSlot.save();
 
-                // Set timeout to change status back to free
                 const reservationDuration = new Date(populatedTimeSlot.end).getTime() - new Date().getTime();
                 
                 setTimeout(async () => {
@@ -165,6 +163,7 @@ export class ReservationsService {
         throw error;
     }
 }
+
 
   
   

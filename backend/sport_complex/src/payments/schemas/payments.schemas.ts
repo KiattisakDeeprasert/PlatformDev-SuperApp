@@ -27,6 +27,7 @@ export class Payment {
 
   @Prop({ type: Date, required: true, default: Date.now })
   dateTime?: Date;
+  
   _id: string;
 }
 export const PaymentSchema = SchemaFactory.createForClass(Payment);
