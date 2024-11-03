@@ -9,21 +9,21 @@ import {
   Patch,
   Post,
   UseInterceptors,
-} from "@nestjs/common";
+} from '@nestjs/common';
 import {
   createResponse,
   MessageBuilder,
   ResponseMethod,
-} from "src/app/common/utils/response.util";
+} from 'src/app/common/utils/response.util';
 import { FieldsService } from './fields.service';
 import { CreateFieldDto } from './dto/create-field.dto';
 import { UpdateFieldDto } from './dto/update-field.dto';
-import { FieldEntity } from "./entities/field.entity";
-import { FieldStatus } from "./enums/field-status.enum";
+import { FieldEntity } from './entities/field.entity';
+import { FieldStatus } from './enums/field-status.enum';
 
-@Controller("fields")
+@Controller('fields')
 export class FieldsController {
-  private readonly messageBuilder = new MessageBuilder("Field");
+  private readonly messageBuilder = new MessageBuilder('Field');
 
   constructor(private readonly fieldsService: FieldsService) {}
 
@@ -34,10 +34,7 @@ export class FieldsController {
     return createResponse(
       HttpStatus.CREATED,
       this.messageBuilder.build(ResponseMethod.create),
-      new FieldEntity({
-        ...field,
-        status: this.convertToFieldStatus(field.status), // Ensure status is converted to enum
-      })
+      new FieldEntity(field),
     );
   }
 
@@ -48,18 +45,19 @@ export class FieldsController {
     return createResponse(
       HttpStatus.OK,
       this.messageBuilder.build(ResponseMethod.findAll),
-      fields.map((field) =>
-        new FieldEntity({
-          ...field,
-          status: this.convertToFieldStatus(field.status), // Ensure status is converted to enum
-        })
-      )
+      fields.map(
+        (field) =>
+          new FieldEntity({
+            ...field,
+            status: this.convertToFieldStatus(field.status), // Ensure status is converted to enum
+          }),
+      ),
     );
   }
 
   @UseInterceptors(ClassSerializerInterceptor)
-  @Get(":id")
-  async findOne(@Param("id") id: string) {
+  @Get(':id')
+  async findOne(@Param('id') id: string) {
     const field = await this.fieldsService.findOne(id);
     return createResponse(
       HttpStatus.OK,
@@ -67,13 +65,16 @@ export class FieldsController {
       new FieldEntity({
         ...field,
         status: this.convertToFieldStatus(field.status), // Ensure status is converted to enum
-      })
+      }),
     );
   }
 
   @UseInterceptors(ClassSerializerInterceptor)
-  @Patch(":id")
-  async update(@Param("id") id: string, @Body() updateFieldDto: UpdateFieldDto) {
+  @Patch(':id')
+  async update(
+    @Param('id') id: string,
+    @Body() updateFieldDto: UpdateFieldDto,
+  ) {
     const field = await this.fieldsService.update(id, updateFieldDto);
     return createResponse(
       HttpStatus.OK,
@@ -81,13 +82,13 @@ export class FieldsController {
       new FieldEntity({
         ...field,
         status: this.convertToFieldStatus(field.status), // Ensure status is converted to enum
-      })
+      }),
     );
   }
 
   @UseInterceptors(ClassSerializerInterceptor)
-  @Delete(":id")
-  async remove(@Param("id") id: string) {
+  @Delete(':id')
+  async remove(@Param('id') id: string) {
     const field = await this.fieldsService.remove(id);
     return createResponse(
       HttpStatus.OK,
@@ -95,7 +96,7 @@ export class FieldsController {
       new FieldEntity({
         ...field,
         status: this.convertToFieldStatus(field.status), // Ensure status is converted to enum
-      })
+      }),
     );
   }
 

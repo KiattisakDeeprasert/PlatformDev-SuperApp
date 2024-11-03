@@ -1,7 +1,13 @@
-export interface FieldType {
-    id:  string;
-    capacity: number;
-    status: "ready" | "not ready";
-    type: string //obj.id  type-sport 
-  }
-  
+export interface Field {
+  id: string;
+  capacity: number;
+  status: "ready" | "not ready";
+  type: {
+    id: string;
+    name: {
+      en: string;
+      th: string;
+    };
+  };
+  price: number;
+}

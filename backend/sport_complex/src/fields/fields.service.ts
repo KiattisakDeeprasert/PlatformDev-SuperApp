@@ -36,7 +36,8 @@ export class FieldsService {
     try {
       const fieldDoc = new this.fieldModel(createFieldDto);
       const field = await fieldDoc.save();
-      return field.toObject();
+      const populateField = await field.populate(POPULATE_PIPE)
+      return populateField.toObject();
     } catch (error) {
       if (error.code === 11000) {
         throw new ConflictException(
@@ -80,7 +81,7 @@ export class FieldsService {
       }
       const options = { new: true };
       const field = await this.fieldModel
-        .findByIdAndUpdate(id, updateFieldDto, options)
+        .findByIdAndUpdate(id, updateFieldDto, options).populate(POPULATE_PIPE)
         .lean();
       return field;
     } catch (error) {

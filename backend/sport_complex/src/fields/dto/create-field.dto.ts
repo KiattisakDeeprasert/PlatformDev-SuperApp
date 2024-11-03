@@ -17,7 +17,6 @@ import { FieldStatus } from "../enums/field-status.enum";
     @IsIn([FieldStatus.ready, FieldStatus.not_ready])
     status: FieldStatus;
   
-    @IsMongoId()
     @IsNotEmpty()
     type: string;
 
