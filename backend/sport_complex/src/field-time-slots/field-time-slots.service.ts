@@ -44,7 +44,8 @@ export class FieldTimeSlotsService {
     try {
       const fieldTimeSlotDoc = new this.fieldTimeSlotModel(createFieldTimeSlotDto);
       const fieldTimeSlot = await fieldTimeSlotDoc.save();
-      return fieldTimeSlot.toObject();
+      const populatefieldTimeSlot = await fieldTimeSlot.populate(POPULATE_PIPE)
+      return populatefieldTimeSlot.toObject();
     } catch (error) {
       if (error.code === 11000) {
         throw new ConflictException(
@@ -89,6 +90,7 @@ export class FieldTimeSlotsService {
       const options = { new: true };
       const fieldTimeSlot = await this.fieldTimeSlotModel
         .findByIdAndUpdate(id, updateFieldTimeSlotDto, options)
+        .populate(POPULATE_PIPE)
         .lean();
       return fieldTimeSlot;
     } catch (error) {

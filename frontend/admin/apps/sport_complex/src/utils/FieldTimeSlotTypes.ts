@@ -1,7 +1,10 @@
-export interface FieldTimeSlotType {
-    id:  string;
-    capacity: number;
-    status: "ready" | "not ready";
-    type: string //obj.id  type-sport 
-  }
-  
+import { Field } from "./FieldTypes";
+import { Timeslot } from "./TimeSlotTypes";
+
+
+export interface FieldTimeSlot {
+  id?: string;
+  field: Field;
+  timeSlot: Timeslot;
+  status: "free" | "reserve" |"in use";
+}

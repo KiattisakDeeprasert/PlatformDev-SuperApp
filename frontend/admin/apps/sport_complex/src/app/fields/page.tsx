@@ -91,8 +91,8 @@ export default function FieldPage() {
     } catch (error) {
       console.error("Error deleting field:", error);
     } finally {
-      setIsConfirmDialogOpen(false); // Close the confirm dialog
-      setFieldIdToDelete(null); // Clear the ID to delete
+      setIsConfirmDialogOpen(false); 
+      setFieldIdToDelete(null);
     }
   };
 

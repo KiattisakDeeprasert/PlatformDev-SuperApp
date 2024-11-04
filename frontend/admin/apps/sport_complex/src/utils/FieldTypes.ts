@@ -1,13 +1,9 @@
+import { Type } from "./Types";
+
 export interface Field {
-  id: string;
+  id?: string;
   capacity: number;
   status: "ready" | "not ready";
-  type: {
-    id: string;
-    name: {
-      en: string;
-      th: string;
-    };
-  };
+  type: Type
   price: number;
 }
