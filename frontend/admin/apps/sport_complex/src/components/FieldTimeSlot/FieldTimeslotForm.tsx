@@ -170,7 +170,7 @@ const FieldTimeSlotForm: React.FC<FieldTimeSlotFormProps> = ({ fieldTimeSlot, on
       {error && <p className="text-red-500">{error}</p>}
 
       <div className="space-y-2">
-        <label className="block text-gray-700 font-medium">Select Field</label>
+        <label className="block font-medium">Select Field</label>
         <select
           name="field"
           value={formData.field.id || ""}
@@ -189,8 +189,8 @@ const FieldTimeSlotForm: React.FC<FieldTimeSlotFormProps> = ({ fieldTimeSlot, on
         </select>
       </div>
 
-      <div className="space-y-2">
-        <label className="block text-gray-700 font-medium">Select Time Slot</label>
+      <div className="space-y-2 mt-3">
+        <label className="block font-medium">Select Time Slot</label>
         <select
           name="timeSlot"
           value={formData.timeSlot.id || ""}
@@ -209,20 +209,22 @@ const FieldTimeSlotForm: React.FC<FieldTimeSlotFormProps> = ({ fieldTimeSlot, on
         </select>
       </div>
 
-      <div className="space-y-2">
-        <label className="block text-gray-700 font-medium">Status</label>
-        <select
-          name="status"
-          value={formData.status}
-          onChange={handleChange}
-          required
-          className="w-full p-2 border border-gray-300 rounded-lg focus:ring focus:ring-blue-200 focus:border-blue-500"
-        >
-          <option value="free">Free</option>
-          <option value="reserve">Reserved</option>
-          <option value="in use">In Use</option>
-        </select>
-      </div>
+      {fieldTimeSlot && (
+        <div className="space-y-2 mt-3">
+          <label className="block font-medium">Status</label>
+          <select
+            name="status"
+            value={formData.status}
+            onChange={handleChange}
+            required
+            className="w-full p-2 border border-gray-300 rounded-lg focus:ring focus:ring-blue-200 focus:border-blue-500"
+          >
+            <option value="free">Free</option>
+            <option value="reserve">Reserved</option>
+            <option value="in use">In Use</option>
+          </select>
+        </div>
+      )}
     </Modal>
   );
 };
