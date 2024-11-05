@@ -179,101 +179,121 @@ export class PaymentsService {
     updatePaymentDto: UpdatePaymentDto,
   ): Promise<Payment> {
     const exists = await this.paymentModel.exists({ _id: id });
-  
+
     if (!exists) {
       throw new NotFoundException(
         this.errorBuilder.build(ErrorMethod.notFound, { id }),
       );
     }
-  
+
     const payment = await this.paymentModel.findById(id);
     if (!payment) {
       throw new NotFoundException('Payment not found');
     }
-  
+
     const { paymentImage, reservation: reservationId } = updatePaymentDto;
-  
+
     if (paymentImage) {
       payment.paymentImage = paymentImage;
-      payment.status = PaymentStatus.completed; // Change status to completed
-      await payment.save(); // Save payment changes
-  
-      // Handle reservation update
-      if (reservationId) {
-        const reservation = await this.reservationModel
-          .findById(reservationId)
-          .populate('timeSlot'); // Ensure timeSlot is populated
-  
-        if (!reservation) {
-          throw new NotFoundException('Reservation not found');
-        }
-  
-        reservation.type = reservationType.confirmed;
-        await reservation.save();
-  
-        const fieldTimeSlot = await this.fieldTimeSlotModel.findOne({
-          field: reservation.field,
-          timeSlot: reservation.timeSlot,
-        });
-  
-        if (fieldTimeSlot) {
-          fieldTimeSlot.status = FieldTimeSlotStatus.reserved;
-          await fieldTimeSlot.save();
-  
-          // Check if timeSlot is populated with start and end properties
-          if (this.isTimeslotPopulated(reservation.timeSlot)) {
-            const startTime = this.convertTimeslotStartToTime(reservation.timeSlot.start);
-            const endTime = this.convertTimeslotStartToTime(reservation.timeSlot.end);
-            const now = new Date();
-  
-            if (startTime && endTime) {
-              // Set timeout to change status to in_use at start time
-              const startDelay = startTime.getTime() - now.getTime();
-              if (startDelay > 0) {
-                setTimeout(async () => {
-                  try {
-                    fieldTimeSlot.status = FieldTimeSlotStatus.in_use;
-                    await fieldTimeSlot.save();
-                    console.log(`FieldTimeSlot for field ${reservation.field} is now in use.`);
-                  } catch (error) {
-                    console.error('Error setting field time slot to in_use:', error);
-                  }
-                }, startDelay);
-              }
-  
-              // Set timeout to change status to free at end time
-              const endDelay = endTime.getTime() - now.getTime();
-              if (endDelay > 0) {
-                setTimeout(async () => {
-                  try {
-                    fieldTimeSlot.status = FieldTimeSlotStatus.free;
-                    await fieldTimeSlot.save();
-                    console.log(`FieldTimeSlot for field is now free.`);
-                  } catch (error) {
-                    console.error('Error setting field time slot to free:', error);
-                  }
-                }, endDelay);
-              }
-            } else {
-              console.error('Invalid start or end time for timeslot.');
+    }
+
+    // Update the status based on whether the paymentImage is provided
+    if (paymentImage) {
+      payment.status = PaymentStatus.completed;
+    } else {
+      payment.status = PaymentStatus.cancelled;
+    }
+
+    await payment.save(); // Save payment changes
+
+    // Handle reservation update if reservationId is provided
+    if (reservationId) {
+      const reservation = await this.reservationModel
+        .findById(reservationId)
+        .populate('timeSlot');
+
+      if (!reservation) {
+        throw new NotFoundException('Reservation not found');
+      }
+
+      reservation.type = reservationType.confirmed;
+      await reservation.save();
+
+      const fieldTimeSlot = await this.fieldTimeSlotModel.findOne({
+        field: reservation.field,
+        timeSlot: reservation.timeSlot,
+      });
+
+      if (fieldTimeSlot) {
+        fieldTimeSlot.status = FieldTimeSlotStatus.reserved;
+        await fieldTimeSlot.save();
+
+        // Check if timeSlot is populated with start and end properties
+        if (this.isTimeslotPopulated(reservation.timeSlot)) {
+          const startTime = this.convertTimeslotStartToTime(
+            reservation.timeSlot.start,
+          );
+          const endTime = this.convertTimeslotStartToTime(
+            reservation.timeSlot.end,
+          );
+          const now = new Date();
+
+          if (startTime && endTime) {
+            // Set timeout to change status to in_use at start time
+            const startDelay = startTime.getTime() - now.getTime();
+            if (startDelay > 0) {
+              setTimeout(async () => {
+                try {
+                  fieldTimeSlot.status = FieldTimeSlotStatus.in_use;
+                  await fieldTimeSlot.save();
+                  console.log(
+                    `FieldTimeSlot for field ${reservation.field} is now in use.`,
+                  );
+                } catch (error) {
+                  console.error(
+                    'Error setting field time slot to in_use:',
+                    error,
+                  );
+                }
+              }, startDelay);
+            }
+
+            // Set timeout to change status to free at end time
+            const endDelay = endTime.getTime() - now.getTime();
+            if (endDelay > 0) {
+              setTimeout(async () => {
+                try {
+                  fieldTimeSlot.status = FieldTimeSlotStatus.free;
+                  await fieldTimeSlot.save();
+                  console.log(`FieldTimeSlot for field is now free.`);
+                } catch (error) {
+                  console.error(
+                    'Error setting field time slot to free:',
+                    error,
+                  );
+                }
+              }, endDelay);
             }
           } else {
-            console.error('timeSlot is not populated as Timeslot.');
+            console.error('Invalid start or end time for timeslot.');
           }
+        } else {
+          console.error('timeSlot is not populated as Timeslot.');
         }
       }
     }
-  
+
     return await this.paymentModel.findById(id).lean();
   }
-  
+
   // Helper function to check if timeSlot is populated with start and end properties
   private isTimeslotPopulated(timeSlot: any): timeSlot is Timeslot {
-    return timeSlot && typeof timeSlot.start === 'string' && typeof timeSlot.end === 'string';
+    return (
+      timeSlot &&
+      typeof timeSlot.start === 'string' &&
+      typeof timeSlot.end === 'string'
+    );
   }
-  
-  
-  
 
   async remove(id: string): Promise<Payment> {
     const payment = await this.paymentModel.findByIdAndDelete(id).lean();

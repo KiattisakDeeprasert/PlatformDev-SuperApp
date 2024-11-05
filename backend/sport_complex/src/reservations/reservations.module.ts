@@ -6,6 +6,7 @@ import { Reservation, ReservationSchema } from "./schemas/reservation.schemas";
 import { FieldsModule } from "src/fields/fields.module";
 import { FieldTimeSlotsModule } from "src/field-time-slots/field-time-slots.module";
 import { PaymentsModule } from "src/payments/payments.module";
+import { UsersModule } from "src/users/users.module";
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { PaymentsModule } from "src/payments/payments.module";
     ]),
     forwardRef(() => FieldsModule),
     forwardRef(() => FieldTimeSlotsModule),
+    forwardRef(() => UsersModule),
     forwardRef(() => PaymentsModule)
   ],
   controllers: [ReservationsController],
