@@ -6,7 +6,7 @@ import { FieldStatus } from '../enums/field-status.enum';
 export type FieldsDocument = HydratedDocument<Field>;
 @Schema()
 export class Field {
-  @Prop({ type: Number, required: true })
+  @Prop({ type: Number, required: true ,default:1})
   capacity: number;
 
   @Prop({ type: SchemaTypes.ObjectId, ref: 'Sport', required: true })

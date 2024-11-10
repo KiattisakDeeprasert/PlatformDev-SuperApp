@@ -47,6 +47,9 @@ importers:
       gem_cars:
         specifier: 'file:'
         version: sport_complex@file:(express@4.21.1)
+      momment:
+        specifier: ^0.0.1
+        version: 0.0.1
       mongodb:
         specifier: ^6.9.0
         version: 6.9.0
@@ -2286,6 +2289,9 @@ packages:
     resolution: {integrity: sha512-vVqVZQyf3WLx2Shd0qJ9xuvqgAyKPLAiqITEtqW0oIUjzo3PePDd6fW9iFz30ef7Ysp/oiWqbhszeGWW2T6Gzw==}
     engines: {node: '>=10'}
     hasBin: true
+
+  momment@0.0.1:
+    resolution: {integrity: sha512-AvXVohTAJGdvRX+audOcqcQLsezKf4hR+QJf4WY2+sHoW37sejk1hrr0qBffSkwgoSZAjkuQDOqC1FtKE7y8Kw==}
 
   mongodb-connection-string-url@3.0.1:
     resolution: {integrity: sha512-XqMGwRX0Lgn05TDB4PyG2h2kKO/FfWJyCzYQbIhXUxz7ETt0I/FqHjUeqj37irJ+Dl1ZtU82uYyj14u2XsZKfg==}
@@ -5839,6 +5845,8 @@ snapshots:
 
   mkdirp@1.0.4: {}
 
+  momment@0.0.1: {}
+
   mongodb-connection-string-url@3.0.1:
     dependencies:
       '@types/whatwg-url': 11.0.5
@@ -6304,6 +6312,7 @@ snapshots:
       mongodb: 6.9.0
       mongoose: 8.5.3
       passport: 0.7.0
+      passport-jwt: 4.0.1
       passport-local: 1.0.0
       reflect-metadata: 0.2.2
       rxjs: 7.8.1
