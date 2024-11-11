@@ -21,7 +21,6 @@ import { PaymentStatus } from 'src/payments/enums/payment.enum';
 import { Timeslot } from 'src/time-slots/schemas/time-slots.schema';
 import { User } from 'src/users/schemas/user.schema';
 import { Field } from 'src/fields/schemas/fields.schemas';
-import { FieldStatus } from 'src/fields/enums/field-status.enum';
 
 const POPULATE_PIPE = [
   {
@@ -59,53 +58,66 @@ export class ReservationsService {
   ) {}
 
   // 1. Create reservation with default "pending" status
-  async create(createReservationDto: CreateReservationDto): Promise<Reservation> {
+  async create(
+    createReservationDto: CreateReservationDto,
+  ): Promise<Reservation> {
     try {
       createReservationDto.type = reservationType.pending;
-  
+
       // Find the field by ID and ensure it's not null
       const field = await this.fieldModel.findById(createReservationDto.field);
       if (!field) {
-        throw new NotFoundException(`Field with ID ${createReservationDto.field} not found`);
+        throw new NotFoundException(
+          `Field with ID ${createReservationDto.field} not found`,
+        );
       }
-  
+
       // Find the FieldTimeSlot for the given field and timeslot
       const fieldTimeSlot = await this.fieldTimeSlotModel.findOne({
         field: createReservationDto.field,
         timeSlot: createReservationDto.timeSlot,
       });
-  
+
       if (!fieldTimeSlot) {
-        throw new NotFoundException(`FieldTimeSlot for this field and timeslot not found`);
+        throw new NotFoundException(
+          `FieldTimeSlot for this field and timeslot not found`,
+        );
       }
-  
+
       // If the FieldTimeSlot status is 'free', skip the conflict check
       if (fieldTimeSlot.status === FieldTimeSlotStatus.free) {
         // Proceed with the reservation creation logic without checking capacity
       } else {
         // Count current reservations for the given field and timeslot
-        const currentReservationsCount = await this.reservationModel.countDocuments({
-          field: createReservationDto.field,
-          timeSlot: createReservationDto.timeSlot,
-          type: { $ne: reservationType.cancelled },  // Exclude cancelled reservations
-        });
-  
+        const currentReservationsCount =
+          await this.reservationModel.countDocuments({
+            field: createReservationDto.field,
+            timeSlot: createReservationDto.timeSlot,
+            type: { $ne: reservationType.cancelled }, // Exclude cancelled reservations
+          });
+
         if (currentReservationsCount >= (field as Field).capacity) {
-          throw new ConflictException(`Field is fully booked for the selected timeslot`);
+          throw new ConflictException(
+            `Field is fully booked for the selected timeslot`,
+          );
         }
       }
-  
+
       // Find the user by username
-      const user = await this.userModel.findOne({ username: createReservationDto.user });
+      const user = await this.userModel.findOne({
+        username: createReservationDto.user,
+      });
       if (!user) {
-        throw new NotFoundException(`User with username ${createReservationDto.user} not found`);
+        throw new NotFoundException(
+          `User with username ${createReservationDto.user} not found`,
+        );
       }
-      createReservationDto.user = user._id;  // Convert user ID to ObjectId if necessary
-  
+      createReservationDto.user = user._id; // Convert user ID to ObjectId if necessary
+
       // Create the reservation document
       const reservationDoc = new this.reservationModel(createReservationDto);
       const reservation = await reservationDoc.save();
-  
+
       // Create payment related to the reservation
       const createPaymentDto = {
         reservation: reservation.id,
@@ -114,37 +126,50 @@ export class ReservationsService {
         dateTime: new Date(),
       };
       const payment = await this.paymentsService.create(createPaymentDto);
-  
+
       // Set timeout to automatically cancel the reservation if payment is not completed within 30 minutes
-      setTimeout(async () => {
-        try {
-          const existingPayment = await this.paymentsService.findOne(payment._id);
-          if (existingPayment && existingPayment.status === PaymentStatus.pending) {
-            // Update payment and reservation statuses to cancelled
-            await this.paymentsService.update(payment._id, { status: PaymentStatus.cancelled });
-            const reservationToCancel = await this.reservationModel.findById(reservation.id);
-            if (reservationToCancel) {
-              reservationToCancel.type = reservationType.cancelled;
-              await reservationToCancel.save();
+      setTimeout(
+        async () => {
+          try {
+            const existingPayment = await this.paymentsService.findOne(
+              payment._id,
+            );
+            if (
+              existingPayment &&
+              existingPayment.status === PaymentStatus.pending
+            ) {
+              // Update payment and reservation statuses to cancelled
+              await this.paymentsService.update(payment._id, {
+                status: PaymentStatus.cancelled,
+              });
+              const reservationToCancel = await this.reservationModel.findById(
+                reservation.id,
+              );
+              if (reservationToCancel) {
+                reservationToCancel.type = reservationType.cancelled;
+                await reservationToCancel.save();
+              }
             }
+          } catch (error) {
+            console.error('Error in setTimeout:', error);
           }
-        } catch (error) {
-          console.error('Error in setTimeout:', error);
-        }
-      }, 30 * 60 * 1000);
-  
+        },
+        30 * 60 * 1000,
+      );
+
       return reservation.toObject();
     } catch (error) {
       if (error.code === 11000) {
-        throw new ConflictException(this.errorBuilder.build(ErrorMethod.duplicated, {
-          action: RequestAction.create,
-        }));
+        throw new ConflictException(
+          this.errorBuilder.build(ErrorMethod.duplicated, {
+            action: RequestAction.create,
+          }),
+        );
       }
       throw error;
     }
   }
-  
-   
+
   // Add other methods like findAll, findOne, update, and remove here...
 
   // 3 & 4. Update reservation status and FieldTimeSlot accordingly

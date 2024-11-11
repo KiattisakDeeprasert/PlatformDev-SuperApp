@@ -16,6 +16,9 @@ import { ReservationsModule } from './reservations/reservations.module';
 import { FieldTimeSlotsModule } from './field-time-slots/field-time-slots.module';
 import { AuthModule } from './auth/auth.module';
 import { SportsModule } from './sports/sports.module';
+import { ComplexReservationsModule } from './complex-reservations/complex-reservations.module';
+import { SpecialFieldModule } from './special-field/special-field.module';
+import { SpecialTableModule } from './special-table/special-table.module';
 
 @Module({
   imports: [
@@ -49,6 +52,9 @@ import { SportsModule } from './sports/sports.module';
     FieldTimeSlotsModule,
     AuthModule,
     SportsModule,
+    ComplexReservationsModule,
+    SpecialFieldModule,
+    SpecialTableModule,
   ],
   controllers: [AppController],
   providers: [AppService],

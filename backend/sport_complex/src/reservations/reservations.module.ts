@@ -16,7 +16,7 @@ import { UsersModule } from "src/users/users.module";
     forwardRef(() => FieldsModule),
     forwardRef(() => FieldTimeSlotsModule),
     forwardRef(() => UsersModule),
-    forwardRef(() => PaymentsModule)
+    forwardRef(() => PaymentsModule),
   ],
   controllers: [ReservationsController],
   providers: [ReservationsService],
