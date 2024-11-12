@@ -63,7 +63,7 @@ export class SpecialFieldService {
       }
       const options = { new: true };
       const specialField = await this.specialFieldModel
-        .findByIdAndUpdate(id, UpdateSpecialFieldDto, options)
+        .findByIdAndUpdate(id, updateSpecialFieldDto, options)
         .lean();
       return specialField;
     } catch (error) {

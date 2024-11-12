@@ -8,6 +8,8 @@ import {
 import { PaymentsModule } from 'src/payments/payments.module';
 import { UsersModule } from 'src/users/users.module';
 import { MongooseModule } from '@nestjs/mongoose';
+import { SpecialTableModule } from 'src/special-table/special-table.module';
+import { PaymentSpecialModule } from 'src/payment-special/payment-special.module';
 
 @Module({
   imports: [
@@ -15,7 +17,8 @@ import { MongooseModule } from '@nestjs/mongoose';
       { name: ComplexReservation.name, schema: ComplexReservationSchema },
     ]),
     forwardRef(() => UsersModule),
-    forwardRef(() => PaymentsModule),
+    forwardRef(() => SpecialTableModule),
+    forwardRef(() => PaymentSpecialModule),
   ],
   controllers: [ComplexReservationsController],
   providers: [ComplexReservationsService],

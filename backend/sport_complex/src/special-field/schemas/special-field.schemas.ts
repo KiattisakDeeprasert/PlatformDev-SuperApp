@@ -14,6 +14,9 @@ export class SpecialField {
 
   @Prop({ type: String, required: false })
   specialfieldImage: string;
+
+  @Prop({ type: Number, required: true })
+  price: number;
 }
 export const SpecialFieldSchema = SchemaFactory.createForClass(SpecialField);
 SpecialFieldSchema.set('toJSON', { flattenObjectIds: true, versionKey: false });

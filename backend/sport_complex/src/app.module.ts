@@ -19,6 +19,7 @@ import { SportsModule } from './sports/sports.module';
 import { ComplexReservationsModule } from './complex-reservations/complex-reservations.module';
 import { SpecialFieldModule } from './special-field/special-field.module';
 import { SpecialTableModule } from './special-table/special-table.module';
+import { PaymentSpecialModule } from './payment-special/payment-special.module';
 
 @Module({
   imports: [
@@ -55,6 +56,7 @@ import { SpecialTableModule } from './special-table/special-table.module';
     ComplexReservationsModule,
     SpecialFieldModule,
     SpecialTableModule,
+    PaymentSpecialModule,
   ],
   controllers: [AppController],
   providers: [AppService],
