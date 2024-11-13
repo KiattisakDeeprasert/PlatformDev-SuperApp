@@ -13,7 +13,7 @@ export class CreatePaymentSpecialDto {
   @IsNotEmpty()
   @IsMongoId()
   reservation: Types.ObjectId;
-
+  
   @IsOptional()
   paymentImage: any;
 

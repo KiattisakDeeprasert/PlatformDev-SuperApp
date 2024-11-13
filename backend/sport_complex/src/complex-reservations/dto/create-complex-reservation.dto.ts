@@ -31,5 +31,6 @@ export class CreateComplexReservationDto {
   dateTime: Date;
 
   @IsNotEmpty()
+  @IsMongoId()
   timeSlot: string;
 }

@@ -11,7 +11,6 @@ export class SpecialTable {
     type: SchemaTypes.ObjectId,
     ref: 'SpecialField',
     required: true,
-    default: () => null,
   })
   name: SpecialField | Types.ObjectId;
 
@@ -19,7 +18,6 @@ export class SpecialTable {
     type: SchemaTypes.ObjectId,
     ref: 'Timeslot',
     required: true,
-    default: () => null,
   })
   timeSlot: Timeslot | Types.ObjectId;
 

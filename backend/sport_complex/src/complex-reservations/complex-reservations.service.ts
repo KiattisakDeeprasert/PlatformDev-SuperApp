@@ -1,6 +1,7 @@
 import {
   ConflictException,
   Injectable,
+  InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
 import { CreateComplexReservationDto } from './dto/create-complex-reservation.dto';
@@ -19,6 +20,8 @@ import { SpecialTable } from 'src/special-table/schemas/special-table.schemas';
 import { ComplexReservationStatus } from './enums/complex-reservation.enum';
 import { SpecialTableStatus } from 'src/special-table/enums/special-table.enum';
 import { PaymentSpecialStatus } from 'src/payment-special/enums/payment-special.enum';
+import { SpecialField } from 'src/special-field/schemas/special-field.schemas';
+import { SpecialTableService } from 'src/special-table/special-table.service';
 
 const POPULATE_PIPE = [
   {
@@ -49,33 +52,22 @@ export class ComplexReservationsService {
     @InjectModel(SpecialTable.name)
     private readonly specialTableModel: Model<SpecialTable>,
     private readonly paymentSpecialService: PaymentSpecialService,
+    private readonly specialTableService: SpecialTableService,
     @InjectModel(User.name)
     private readonly userModel: Model<User>,
+    @InjectModel(SpecialField.name)
+    private readonly specialFieldModel: Model<SpecialField>,
   ) {}
 
-  // async create(createComplexReservationDto: CreateComplexReservationDto): Promise<ComplexReservation> {
-  //   try {
-  //     const ComplexReservationDoc = new this.complexReservationModel(createComplexReservationDto);
-  //     const complexReservation = await ComplexReservationDoc.save();
-  //     return complexReservation.toObject();
-  //   } catch (error) {
-  //     if (error.code === 11000) {
-  //       throw new ConflictException(
-  //         this.errorBuilder.build(ErrorMethod.duplicated, {
-  //           action: RequestAction.create,
-  //         })
-  //       );
-  //     }
-  //   }
-  // }
   async create(
     createComplexReservationDto: CreateComplexReservationDto,
   ): Promise<ComplexReservation> {
     try {
+      // Set the reservation status to pending initially
       createComplexReservationDto.status = ComplexReservationStatus.pending;
 
-      // Find the field by ID and ensure it's not null
-      const field = await this.specialTableModel.findById(
+      // Check for field availability
+      const field = await this.specialFieldModel.findById(
         createComplexReservationDto.name,
       );
       if (!field) {
@@ -84,36 +76,20 @@ export class ComplexReservationsService {
         );
       }
 
-      // Find the FieldTimeSlot for the given field and timeslot
-      const SpecialTable = await this.specialTableModel.findOne({
+      // Check if the timeslot is available in the special table
+      const specialTable = await this.specialTableModel.findOne({
         name: createComplexReservationDto.name,
         timeSlot: createComplexReservationDto.timeSlot,
       });
-
-      if (!SpecialTable) {
+      if (!specialTable) {
         throw new NotFoundException(
           `SpecialTable for this field and timeslot not found`,
         );
       }
-
-      // If the FieldTimeSlot status is 'free', skip the conflict check
-      if (SpecialTable.status === SpecialTableStatus.free) {
-        // Proceed with the reservation creation logic without checking capacity
-      } else {
-        // Count current reservations for the given field and timeslot
-        const currentReservationsCount =
-          await this.complexReservationModel.countDocuments({
-            name: createComplexReservationDto.name,
-            timeSlot: createComplexReservationDto.timeSlot,
-            type: { $ne: ComplexReservationStatus.cancelled }, // Exclude cancelled reservations
-          });
-
-        if (currentReservationsCount >= (field as SpecialTable).capacity) {
-          throw new ConflictException(
-            `Field is fully booked for the selected timeslot`,
-          );
-        }
-      }
+      console.log('name in DTO:', createComplexReservationDto.name);//delete ออกด้วย
+      console.log('timeSlot in DTO:', createComplexReservationDto.timeSlot);//delete ออกด้วย
+      const specialTables = await this.specialTableModel.find({});//delete ออกด้วย
+      console.log('All SpecialTables:', specialTables);//delete ออกด้วย
 
       // Find the user by username
       const user = await this.userModel.findOne({
@@ -124,47 +100,80 @@ export class ComplexReservationsService {
           `User with username ${createComplexReservationDto.user} not found`,
         );
       }
-      createComplexReservationDto.user = user._id; // Convert user ID to ObjectId if necessary
 
-      // Create the reservation document
+      // Set user ID in the reservation data
+      createComplexReservationDto.user = user._id;
+
+      // Save the reservation
       const reservationDoc = new this.complexReservationModel(
         createComplexReservationDto,
       );
       const reservation = await reservationDoc.save();
 
-      // Create payment related to the reservation
-      const createPaymentDto = {
-        reservation: reservation.id,
-        paymentImage: null,
-        status: PaymentSpecialStatus.pending,
-        dateTime: new Date(),
-      };
-      const payment = await this.paymentSpecialService.create(createPaymentDto);
+      try {
+        // Create payment associated with the reservation
+        const createPaymentDto = {
+          reservation: reservation._id,
+          paymentImage: null,
+          status: PaymentSpecialStatus.pending,
+          dateTime: new Date(),
+        };
+        await this.paymentSpecialService.create(createPaymentDto);
+      } catch (paymentError) {
+        // If payment creation fails, update reservation status to cancelled
+        reservation.status = ComplexReservationStatus.cancelled;
+        await reservation.save();
+        console.error(
+          'Payment creation failed, reservation cancelled:',
+          paymentError,
+        );
+        throw new InternalServerErrorException(
+          'Payment creation failed, reservation cancelled',
+        );
+      }
 
-      // Set timeout to automatically cancel the reservation if payment is not completed within 30 minutes
+      // Update user count in SpecialTable
+      if (reservation.status === ComplexReservationStatus.confirmed) {
+        // Update user count in SpecialTable for the corresponding field and timeslot
+        await this.specialTableService.updateSpecialTableUserCount(
+          reservation.name.toString(),
+        );
+      }
+
+      // Reset SpecialTable user count after the timeslot ends
+      if (reservation.timeSlot && 'end' in reservation.timeSlot) {
+        await this.specialTableService.resetSpecialTableUserCount(
+          reservation.name.toString(),
+          new Date(reservation.timeSlot.end),
+        );
+      }
+
+      // Set a timeout for automatic cancellation if payment is not completed within 30 minutes
       setTimeout(
         async () => {
           try {
-            const existingPayment = await this.paymentSpecialService.findOne(
-              payment._id,
-            );
+            // Find the payment by filtering on the `reservation` field
+            const existingPayment =
+              await this.paymentSpecialService.findPaymentByReservation(
+                reservation.id,
+              );
+
             if (
               existingPayment &&
               existingPayment.status === PaymentSpecialStatus.pending
             ) {
-              // Update payment and reservation statuses to cancelled
-              await this.paymentSpecialService.update(payment._id, {
+              // Update payment and reservation status to cancelled
+              await this.paymentSpecialService.update(existingPayment._id, {
                 status: PaymentSpecialStatus.cancelled,
               });
-              const reservationToCancel =
-                await this.complexReservationModel.findById(reservation.id);
-              if (reservationToCancel) {
-                reservationToCancel.status = ComplexReservationStatus.cancelled;
-                await reservationToCancel.save();
-              }
+              reservation.status = ComplexReservationStatus.cancelled;
+              await reservation.save();
             }
           } catch (error) {
-            console.error('Error in setTimeout:', error);
+            console.error(
+              'Error in setTimeout for reservation cancellation:',
+              error,
+            );
           }
         },
         30 * 60 * 1000,
@@ -174,9 +183,7 @@ export class ComplexReservationsService {
     } catch (error) {
       if (error.code === 11000) {
         throw new ConflictException(
-          this.errorBuilder.build(ErrorMethod.duplicated, {
-            action: RequestAction.create,
-          }),
+          'Duplicate entry detected while creating reservation',
         );
       }
       throw error;

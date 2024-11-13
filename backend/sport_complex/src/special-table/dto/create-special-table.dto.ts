@@ -1,11 +1,13 @@
-import { IsIn, IsNotEmpty, IsNumber, IsString } from "class-validator";
+import { IsIn, IsMongoId, IsNotEmpty, IsNumber, IsString } from "class-validator";
 import { SpecialTableStatus } from "../enums/special-table.enum";
 
 export class CreateSpecialTableDto {
   @IsNotEmpty()
+  @IsMongoId()
   name: string;
 
   @IsNotEmpty()
+  @IsMongoId()
   timeSlot: string;
   
   @IsNumber()
