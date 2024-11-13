@@ -7,7 +7,7 @@ import { ComplexReservationEntity } from 'src/complex-reservations/entities/comp
 import { ComplexReservation } from 'src/complex-reservations/schemas/complex-reservation.schemas';
 
 export class PaymentSpecialEntity extends MongoEntity {
-  @TransformId((v) => new ComplexReservationEntity(v))
+  @TransformId((v)=> new ComplexReservationEntity(v))
   reservation?: Types.ObjectId | ComplexReservation | null;
 
   @TransformUrl({ type: 'string' })

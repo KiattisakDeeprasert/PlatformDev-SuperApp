@@ -156,9 +156,10 @@ export class PaymentSpecialService {
           console.log('Reservation found and updated:', reservation); // เพิ่ม log สำหรับการอัปเดตสถานะการจอง
           await reservation.save();
         }
-  
+        
         // บันทึกการเปลี่ยนแปลงของ payment
-        return await payment.save();
+        await payment.save();
+        return payment.toObject();
       } else {
         console.log('No paymentImage found in DTO, performing general update'); // เพิ่ม log กรณีไม่มี paymentImage
         const paymentSpecial = await this.paymentSpecialModel
