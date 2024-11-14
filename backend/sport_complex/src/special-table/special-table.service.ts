@@ -14,6 +14,7 @@ import { SpecialTable } from './schemas/special-table.schemas';
 import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { SpecialTableStatus } from './enums/special-table.enum';
+import { Timeslot } from 'src/time-slots/schemas/time-slots.schema';
 
 const POPULATE_PIPE = [
   {
@@ -109,18 +110,47 @@ export class SpecialTableService {
       throw error;
     }
   }
+  private convertTimeslotEndToTime(end: string): Date {
+    const [hoursStr, minutesStr] = end.split(':').map((str) => str.trim());
+    const hours = Number(hoursStr);
+    const minutes = Number(minutesStr);
 
+    if (
+      isNaN(hours) ||
+      isNaN(minutes) ||
+      hours < 0 ||
+      hours > 23 ||
+      minutes < 0 ||
+      minutes > 59
+    ) {
+      console.error(`Invalid timeslot end string: ${end}`);
+      return new Date(NaN);
+    }
+
+    const now = new Date();
+    now.setHours(hours);
+    now.setMinutes(minutes);
+    now.setSeconds(0);
+    now.setMilliseconds(0);
+
+    return now;
+  }
   async resetSpecialTableUserCount(
     specialTableId: string,
-    timeSlotEnd: Date,
+    timeSlotEnd: string,
   ): Promise<void> {
     const specialTable = await this.specialTableModel.findById(specialTableId);
     if (!specialTable) {
       throw new NotFoundException('SpecialTable not found');
     }
-
-    const delay = timeSlotEnd.getTime() - Date.now();
-
+    const timeSlotEndDate = this.convertTimeslotEndToTime(timeSlotEnd);
+    if (isNaN(timeSlotEndDate.getTime())) {
+      console.error('Invalid end time provided for reset');
+      throw new Error('Invalid timeSlotEnd');
+    }
+  
+    const delay = timeSlotEndDate.getTime() - Date.now();
+  
     if (delay > 0) {
       setTimeout(async () => {
         specialTable.userCurrent = 0;
@@ -131,6 +161,7 @@ export class SpecialTableService {
       console.warn('End time is in the past, no reset scheduled');
     }
   }
+  
 
   async update(
     id: string,

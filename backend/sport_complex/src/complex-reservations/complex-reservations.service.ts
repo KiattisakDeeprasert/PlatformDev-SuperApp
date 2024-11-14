@@ -52,13 +52,10 @@ export class ComplexReservationsService {
     @InjectModel(SpecialTable.name)
     private readonly specialTableModel: Model<SpecialTable>,
     private readonly paymentSpecialService: PaymentSpecialService,
-    private readonly specialTableService: SpecialTableService,
     @InjectModel(User.name)
     private readonly userModel: Model<User>,
     @InjectModel(SpecialField.name)
     private readonly specialFieldModel: Model<SpecialField>,
-    @InjectModel(SpecialField.name)
-    private readonly timeslotModel: Model<Timeslot>,
   ) {}
   // Helper function to check if timeSlot is populated with start and end properties
   private isTimeslotPopulated(timeSlot: any): timeSlot is Timeslot {
@@ -67,160 +64,6 @@ export class ComplexReservationsService {
       typeof timeSlot.start === 'string' &&
       typeof timeSlot.end === 'string'
     );
-  }
-
-  
-  // async create(
-  //   createComplexReservationDto: CreateComplexReservationDto,
-  // ): Promise<ComplexReservation> {
-  //   try {
-  //     // Set the reservation status to pending initially
-  //     createComplexReservationDto.status = ComplexReservationStatus.pending;
-  
-  //     // Check for field availability
-  //     const field = await this.specialFieldModel.findById(
-  //       createComplexReservationDto.name,
-  //     );
-  //     if (!field) {
-  //       throw new NotFoundException(
-  //         `Field with ID ${createComplexReservationDto.name} not found`,
-  //       );
-  //     }
-  
-  //     // Check if the timeslot is available in the special table
-  //     const specialTable = await this.specialTableModel.findOne({
-  //       name: createComplexReservationDto.name,
-  //       timeSlot: createComplexReservationDto.timeSlot,
-  //     });
-  //     if (!specialTable) {
-  //       throw new NotFoundException(
-  //         `SpecialTable for this field and timeslot not found`,
-  //       );
-  //     }
-  
-  //     // Find the user by username
-  //     const user = await this.userModel.findOne({
-  //       username: createComplexReservationDto.user,
-  //     });
-  //     if (!user) {
-  //       throw new NotFoundException(
-  //         `User with username ${createComplexReservationDto.user} not found`,
-  //       );
-  //     }
-  
-  //     // Set user ID in the reservation data
-  //     createComplexReservationDto.user = user._id;
-  
-  //     // Save the reservation in pending state
-  //     const reservationDoc = new this.complexReservationModel(
-  //       createComplexReservationDto,
-  //     );
-  //     const reservation = await reservationDoc.save();
-  
-  //     // Try to create payment associated with the reservation
-  //     try {
-  //       const createPaymentDto = {
-  //         reservation: reservation._id,
-  //         paymentImage: null, // Initially, no payment image
-  //         status: PaymentSpecialStatus.pending,
-  //         dateTime: new Date(),
-  //       };
-  //       await this.paymentSpecialService.create(createPaymentDto);
-  //     } catch (paymentError) {
-  //       // If payment creation fails, update reservation status to cancelled
-  //       reservation.status = ComplexReservationStatus.cancelled;
-  //       await reservation.save();
-  //       console.error(
-  //         'Payment creation failed, reservation cancelled:',
-  //         paymentError,
-  //       );
-  //       throw new InternalServerErrorException(
-  //         'Payment creation failed, reservation cancelled',
-  //       );
-  //     }
-  
-  //     // Fetch the full timeslot document to access the `end` time
-  //     const timeslot = await this.timeslotModel.findById(createComplexReservationDto.timeSlot);
-  //     if (!timeslot || !timeslot.end) {
-  //       throw new NotFoundException('Timeslot with valid end time not found');
-  //     }
-  
-  //     // Convert the timeslot end time to a Date object
-  //     const endTime = this.convertTimeslotStartToTime(timeslot.end);
-  
-  //     if (isNaN(endTime.getTime())) {
-  //       throw new InternalServerErrorException(
-  //         `Invalid timeslot end time format for timeslot ID ${createComplexReservationDto.timeSlot}`
-  //       );
-  //     }
-  
-  //     // Schedule reset of user count in SpecialTable after the timeslot ends
-  //     await this.specialTableService.resetSpecialTableUserCount(
-  //       specialTable.id,
-  //       endTime,
-  //     );
-  
-  //     // Return the reservation, which is still in the pending state
-  //     return reservation.toObject();
-  //   } catch (error) {
-  //     if (error.code === 11000) {
-  //       throw new ConflictException(
-  //         'Duplicate entry detected while creating reservation',
-  //       );
-  //     }
-  //     throw error;
-  //   }
-  // }
-  private convertTimeslotStartToTime(start: string): Date {
-    const [hoursStr, minutesStr] = start.split(':').map((str) => str.trim());
-    const hours = Number(hoursStr);
-    const minutes = Number(minutesStr);
-
-    if (
-      isNaN(hours) ||
-      isNaN(minutes) ||
-      hours < 0 ||
-      hours > 23 ||
-      minutes < 0 ||
-      minutes > 59
-    ) {
-      console.error(`Invalid timeslot start string: ${start}`);
-      return new Date(NaN);
-    }
-
-    const now = new Date();
-    now.setHours(hours);
-    now.setMinutes(minutes);
-    now.setSeconds(0);
-    now.setMilliseconds(0);
-
-    return now;
-  }
-
-  private convertTimeslotEndToTime(end: string): Date {
-    const [hoursStr, minutesStr] = end.split(':').map((str) => str.trim());
-    const hours = Number(hoursStr);
-    const minutes = Number(minutesStr);
-
-    if (
-      isNaN(hours) ||
-      isNaN(minutes) ||
-      hours < 0 ||
-      hours > 23 ||
-      minutes < 0 ||
-      minutes > 59
-    ) {
-      console.error(`Invalid timeslot end string: ${end}`);
-      return new Date(NaN);
-    }
-
-    const now = new Date();
-    now.setHours(hours);
-    now.setMinutes(minutes);
-    now.setSeconds(0);
-    now.setMilliseconds(0);
-
-    return now;
   }
 
   async create(createComplexReservationDto: CreateComplexReservationDto): Promise<ComplexReservation> {

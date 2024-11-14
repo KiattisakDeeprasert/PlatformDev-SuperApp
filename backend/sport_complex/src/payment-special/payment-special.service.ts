@@ -55,64 +55,9 @@ export class PaymentSpecialService {
     @InjectModel(SpecialTable.name)
     private readonly specialTableModel: Model<SpecialTable>,
     private readonly specialTableService: SpecialTableService,
+    @InjectModel(Timeslot.name)
+    private readonly timeslotModel: Model<Timeslot>,
   ) {}
-  private convertTimeslotStartToTime(start: string): Date {
-    const [hoursStr, minutesStr] = start.split(':').map((str) => str.trim());
-    const hours = Number(hoursStr);
-    const minutes = Number(minutesStr);
-
-    if (
-      isNaN(hours) ||
-      isNaN(minutes) ||
-      hours < 0 ||
-      hours > 23 ||
-      minutes < 0 ||
-      minutes > 59
-    ) {
-      console.error(`Invalid timeslot start string: ${start}`);
-      return new Date(NaN);
-    }
-
-    const now = new Date();
-    now.setHours(hours);
-    now.setMinutes(minutes);
-    now.setSeconds(0);
-    now.setMilliseconds(0);
-
-    return now;
-  }
-  private isTimeslotPopulated(timeSlot: any): timeSlot is Timeslot {
-    return (
-      timeSlot &&
-      typeof timeSlot.start === 'string' &&
-      typeof timeSlot.end === 'string'
-    );
-  }
-  private convertTimeslotEndToTime(end: string): Date {
-    const [hoursStr, minutesStr] = end.split(':').map((str) => str.trim());
-    const hours = Number(hoursStr);
-    const minutes = Number(minutesStr);
-
-    if (
-      isNaN(hours) ||
-      isNaN(minutes) ||
-      hours < 0 ||
-      hours > 23 ||
-      minutes < 0 ||
-      minutes > 59
-    ) {
-      console.error(`Invalid timeslot end string: ${end}`);
-      return new Date(NaN);
-    }
-
-    const now = new Date();
-    now.setHours(hours);
-    now.setMinutes(minutes);
-    now.setSeconds(0);
-    now.setMilliseconds(0);
-
-    return now;
-  }
   async create(
     createPaymentSpecialDto: CreatePaymentSpecialDto,
   ): Promise<PaymentSpecial> {
@@ -178,7 +123,6 @@ export class PaymentSpecialService {
       throw error;
     }
   }
-  
   async update(
     id: string,
     updatePaymentSpecialDto: UpdatePaymentSpecialDto,
@@ -190,52 +134,70 @@ export class PaymentSpecialService {
           this.errorBuilder.build(ErrorMethod.notFound, { id }),
         );
       }
-  
+
       const options = { new: true };
-  
+
       if (updatePaymentSpecialDto.paymentImage) {
-        console.log('Updating payment with paymentImage:', updatePaymentSpecialDto.paymentImage);
-  
+        console.log(
+          'Updating payment with paymentImage:',
+          updatePaymentSpecialDto.paymentImage,
+        );
+
         // Find the payment and update its status
         const payment = await this.paymentSpecialModel.findById(id);
         if (!payment) {
           throw new NotFoundException('Payment not found');
         }
-  
+
         // Update payment status to completed and save the payment image
         payment.paymentImage = updatePaymentSpecialDto.paymentImage;
         payment.status = PaymentSpecialStatus.completed;
-  
+
         // Find the associated reservation
-        const reservation = await this.complexReservationModel.findById(payment.reservation);
+        const reservation = await this.complexReservationModel.findById(
+          payment.reservation,
+        );
         if (!reservation) {
           throw new NotFoundException('Reservation not found');
         }
-  
+
         // Set reservation status to confirmed
         reservation.status = ComplexReservationStatus.confirmed;
         console.log('Reservation found and updated:', reservation);
         await reservation.save();
-  
+
         // Find the associated SpecialTable
         const specialTable = await this.specialTableModel.findOne({
           name: reservation.name,
           timeSlot: reservation.timeSlot,
         });
-  
+
         if (!specialTable) {
           throw new NotFoundException('SpecialTable not found');
         }
-  
-        // Update user count in SpecialTable
+
+          // Check if timeSlot is an ObjectId or Timeslot, and ensure it has the "end" property
+      if (reservation.timeSlot instanceof Timeslot) {
+        // If it's an instance of Timeslot, proceed as normal
         await this.specialTableService.updateSpecialTableUserCount(specialTable.id);
-  
+        await this.specialTableService.resetSpecialTableUserCount(specialTable.id, reservation.timeSlot.end);
+      } else {
+        // If it's an ObjectId, we need to fetch the Timeslot from the database
+        const timeSlot = await this.timeslotModel.findById(reservation.timeSlot);
+        if (!timeSlot || !timeSlot.end) {
+          console.error('Invalid timeSlot: "end" property is missing');
+          throw new BadRequestException('Invalid timeSlot: "end" property is missing');
+        }
+        // Now we have the actual Timeslot and can proceed
+        await this.specialTableService.updateSpecialTableUserCount(specialTable.id);
+        await this.specialTableService.resetSpecialTableUserCount(specialTable.id, timeSlot.end);
+      }
         // Save the updated payment
         await payment.save();
         return payment.toObject();
       } else {
         console.log('No paymentImage found in DTO, performing general update');
-        
+
         // If no paymentImage, just perform a regular update
         const paymentSpecial = await this.paymentSpecialModel
           .findByIdAndUpdate(id, updatePaymentSpecialDto, options)
@@ -256,10 +218,6 @@ export class PaymentSpecialService {
       );
     }
   }
-  
-  
-  
-  
 
   async remove(id: string): Promise<PaymentSpecial> {
     const paymentSpecial = await this.paymentSpecialModel
