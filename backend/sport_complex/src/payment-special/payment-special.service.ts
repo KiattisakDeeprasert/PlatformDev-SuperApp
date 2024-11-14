@@ -19,6 +19,9 @@ import { ComplexReservation } from 'src/complex-reservations/schemas/complex-res
 import { SpecialTable } from 'src/special-table/schemas/special-table.schemas';
 import { PaymentSpecialStatus } from './enums/payment-special.enum';
 import { ComplexReservationStatus } from 'src/complex-reservations/enums/complex-reservation.enum';
+import { SpecialTableService } from 'src/special-table/special-table.service';
+import { SpecialTableStatus } from 'src/special-table/enums/special-table.enum';
+import { Timeslot } from 'src/time-slots/schemas/time-slots.schema';
 
 const POPULATE_PIPE = [
   {
@@ -51,7 +54,65 @@ export class PaymentSpecialService {
     private readonly complexReservationModel: Model<ComplexReservation>,
     @InjectModel(SpecialTable.name)
     private readonly specialTableModel: Model<SpecialTable>,
+    private readonly specialTableService: SpecialTableService,
   ) {}
+  private convertTimeslotStartToTime(start: string): Date {
+    const [hoursStr, minutesStr] = start.split(':').map((str) => str.trim());
+    const hours = Number(hoursStr);
+    const minutes = Number(minutesStr);
+
+    if (
+      isNaN(hours) ||
+      isNaN(minutes) ||
+      hours < 0 ||
+      hours > 23 ||
+      minutes < 0 ||
+      minutes > 59
+    ) {
+      console.error(`Invalid timeslot start string: ${start}`);
+      return new Date(NaN);
+    }
+
+    const now = new Date();
+    now.setHours(hours);
+    now.setMinutes(minutes);
+    now.setSeconds(0);
+    now.setMilliseconds(0);
+
+    return now;
+  }
+  private isTimeslotPopulated(timeSlot: any): timeSlot is Timeslot {
+    return (
+      timeSlot &&
+      typeof timeSlot.start === 'string' &&
+      typeof timeSlot.end === 'string'
+    );
+  }
+  private convertTimeslotEndToTime(end: string): Date {
+    const [hoursStr, minutesStr] = end.split(':').map((str) => str.trim());
+    const hours = Number(hoursStr);
+    const minutes = Number(minutesStr);
+
+    if (
+      isNaN(hours) ||
+      isNaN(minutes) ||
+      hours < 0 ||
+      hours > 23 ||
+      minutes < 0 ||
+      minutes > 59
+    ) {
+      console.error(`Invalid timeslot end string: ${end}`);
+      return new Date(NaN);
+    }
+
+    const now = new Date();
+    now.setHours(hours);
+    now.setMinutes(minutes);
+    now.setSeconds(0);
+    now.setMilliseconds(0);
+
+    return now;
+  }
   async create(
     createPaymentSpecialDto: CreatePaymentSpecialDto,
   ): Promise<PaymentSpecial> {
@@ -124,7 +185,6 @@ export class PaymentSpecialService {
   ): Promise<PaymentSpecial> {
     const exists = await this.paymentSpecialModel.exists({ _id: id });
     try {
-      console.log('Checking if payment exists with ID:', id); // เพิ่ม log เพื่อเช็คว่าเจอ payment หรือไม่
       if (!exists) {
         throw new NotFoundException(
           this.errorBuilder.build(ErrorMethod.notFound, { id }),
@@ -133,35 +193,50 @@ export class PaymentSpecialService {
   
       const options = { new: true };
   
-      console.log('Received DTO for update:', updatePaymentSpecialDto); // เพิ่ม log เพื่อเช็คค่า DTO ที่รับมา
-  
-      // ตรวจสอบว่ามี paymentImage อยู่ใน DTO เพื่ออัปเดตสถานะการชำระเงินและการจอง
       if (updatePaymentSpecialDto.paymentImage) {
-        console.log('Updating payment with paymentImage:', updatePaymentSpecialDto.paymentImage); // เพิ่ม log ก่อนการอัปเดต
+        console.log('Updating payment with paymentImage:', updatePaymentSpecialDto.paymentImage);
+  
+        // Find the payment and update its status
         const payment = await this.paymentSpecialModel.findById(id);
         if (!payment) {
           throw new NotFoundException('Payment not found');
         }
   
-        // อัปเดต paymentImage และสถานะการชำระเงิน
+        // Update payment status to completed and save the payment image
         payment.paymentImage = updatePaymentSpecialDto.paymentImage;
         payment.status = PaymentSpecialStatus.completed;
   
-        console.log('Payment found and updated:', payment); // เพิ่ม log เมื่อ payment ถูกอัปเดตแล้ว
-  
-        // อัปเดตสถานะการจองเป็น 'confirmed'
+        // Find the associated reservation
         const reservation = await this.complexReservationModel.findById(payment.reservation);
-        if (reservation) {
-          reservation.status = ComplexReservationStatus.confirmed;
-          console.log('Reservation found and updated:', reservation); // เพิ่ม log สำหรับการอัปเดตสถานะการจอง
-          await reservation.save();
+        if (!reservation) {
+          throw new NotFoundException('Reservation not found');
         }
-        
-        // บันทึกการเปลี่ยนแปลงของ payment
+  
+        // Set reservation status to confirmed
+        reservation.status = ComplexReservationStatus.confirmed;
+        console.log('Reservation found and updated:', reservation);
+        await reservation.save();
+  
+        // Find the associated SpecialTable
+        const specialTable = await this.specialTableModel.findOne({
+          name: reservation.name,
+          timeSlot: reservation.timeSlot,
+        });
+  
+        if (!specialTable) {
+          throw new NotFoundException('SpecialTable not found');
+        }
+  
+        // Update user count in SpecialTable
+        await this.specialTableService.updateSpecialTableUserCount(specialTable.id);
+  
+        // Save the updated payment
         await payment.save();
         return payment.toObject();
       } else {
-        console.log('No paymentImage found in DTO, performing general update'); // เพิ่ม log กรณีไม่มี paymentImage
+        console.log('No paymentImage found in DTO, performing general update');
+        
+        // If no paymentImage, just perform a regular update
         const paymentSpecial = await this.paymentSpecialModel
           .findByIdAndUpdate(id, updatePaymentSpecialDto, options)
           .lean();
@@ -181,6 +256,9 @@ export class PaymentSpecialService {
       );
     }
   }
+  
+  
+  
   
 
   async remove(id: string): Promise<PaymentSpecial> {

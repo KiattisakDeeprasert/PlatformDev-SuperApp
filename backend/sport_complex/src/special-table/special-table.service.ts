@@ -79,27 +79,37 @@ export class SpecialTableService {
     }
   }
   async updateSpecialTableUserCount(specialTableId: string): Promise<void> {
-    const specialTable = await this.specialTableModel.findById(specialTableId);
-    if (!specialTable) {
-      throw new NotFoundException('SpecialTable not found');
-    }
-  
-    // Check if there is room for more users
-    if (specialTable.userCurrent < specialTable.capacity) {
-      specialTable.userCurrent += 1;
-  
-      // If the table is fully booked, update its status
-      if (specialTable.userCurrent === specialTable.capacity) {
-        specialTable.status = SpecialTableStatus.full;
+    try {
+      const specialTable =
+        await this.specialTableModel.findById(specialTableId);
+      if (!specialTable) {
+        throw new NotFoundException('SpecialTable not found');
       }
-  
-      // Save the updated special table
-      await specialTable.save();
-    } else {
-      throw new ConflictException('SpecialTable is already full');
+
+      // Check if there is room for more users
+      if (specialTable.userCurrent < specialTable.capacity) {
+        specialTable.userCurrent += 1;
+
+        // If the table is fully booked, update its status
+        if (specialTable.userCurrent === specialTable.capacity) {
+          specialTable.status = SpecialTableStatus.full;
+        }
+
+        // Save the updated special table
+        await specialTable.save();
+        console.log(
+          `Updated SpecialTable user count to ${specialTable.userCurrent}`,
+        );
+      } else {
+        console.log('SpecialTable is already full, cannot add user');
+        throw new ConflictException('SpecialTable is already full');
+      }
+    } catch (error) {
+      console.error('Error updating SpecialTable user count:', error);
+      throw error;
     }
   }
-  
+
   async resetSpecialTableUserCount(
     specialTableId: string,
     timeSlotEnd: Date,
@@ -110,12 +120,15 @@ export class SpecialTableService {
     }
 
     const delay = timeSlotEnd.getTime() - Date.now();
+
     if (delay > 0) {
       setTimeout(async () => {
         specialTable.userCurrent = 0;
         specialTable.status = SpecialTableStatus.free;
         await specialTable.save();
       }, delay);
+    } else {
+      console.warn('End time is in the past, no reset scheduled');
     }
   }
 

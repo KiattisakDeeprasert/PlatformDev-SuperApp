@@ -11,6 +11,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { SpecialTableModule } from 'src/special-table/special-table.module';
 import { PaymentSpecialModule } from 'src/payment-special/payment-special.module';
 import { SpecialFieldModule } from 'src/special-field/special-field.module';
+import { TimeSlotsModule } from 'src/time-slots/time-slots.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { SpecialFieldModule } from 'src/special-field/special-field.module';
     forwardRef(() => SpecialTableModule),
     forwardRef(() => PaymentSpecialModule),
     forwardRef(() => SpecialFieldModule),
+    forwardRef(() => TimeSlotsModule),
   ],
   controllers: [ComplexReservationsController],
   providers: [ComplexReservationsService],
