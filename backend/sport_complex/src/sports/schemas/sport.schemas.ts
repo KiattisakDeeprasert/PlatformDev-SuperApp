@@ -11,6 +11,8 @@ export class Sport {
     }),
   )
   name: { th: string; en: string };
+  @Prop({ type: String, required: true })
+  sportImage: string;
 }
 export const SportSchema = SchemaFactory.createForClass(Sport);
 SportSchema.set('toJSON', { flattenObjectIds: true, versionKey: false });

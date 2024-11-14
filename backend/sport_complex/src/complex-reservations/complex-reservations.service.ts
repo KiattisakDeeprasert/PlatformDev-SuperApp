@@ -22,6 +22,7 @@ import { PaymentSpecialStatus } from 'src/payment-special/enums/payment-special.
 import { SpecialField } from 'src/special-field/schemas/special-field.schemas';
 import { SpecialTableService } from 'src/special-table/special-table.service';
 import { Timeslot } from 'src/time-slots/schemas/time-slots.schema';
+import { SpecialTableStatus } from 'src/special-table/enums/special-table.enum';
 
 const POPULATE_PIPE = [
   {
@@ -84,6 +85,9 @@ export class ComplexReservationsService {
       });
       if (!user) throw new NotFoundException(`User with username ${createComplexReservationDto.user} not found`);
 
+      if(specialTable.status === SpecialTableStatus.full) {
+        throw new ConflictException('This table is already full');
+      }
       createComplexReservationDto.user = user._id;
 
       const reservationDoc = new this.complexReservationModel(createComplexReservationDto);
