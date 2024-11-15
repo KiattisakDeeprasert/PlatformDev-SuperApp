@@ -20,20 +20,27 @@ export default function SportTable({
           <tr>
             <th className="px-6 py-3 text-center">EN (English)</th>
             <th className="px-6 py-3 text-center">TH (Thai)</th>
+            <th className="px-6 py-3 text-center">Image</th>
             <th className="px-6 py-3 text-center">Actions</th>
           </tr>
         </thead>
         <tbody className="text-gray-700">
           {sports.map((sport, index) => (
-            <tr
-              key={sport.id || index}
-              className="border-b hover:bg-gray-50"
-            >
+            <tr key={sport.id || index} className="border-b hover:bg-gray-50">
               <td className="px-6 py-4 text-center">
                 {sport.name.en || "No Data"}
               </td>
               <td className="px-6 py-4 text-center">
                 {sport.name.th || "No Data"}
+              </td>
+              <td className="px-6 py-4 text-center">
+                {/* Preview the sport image if it exists */}
+
+                <img
+                  src={sport.sportImage}
+                  alt={sport.name.en}
+                  className="w-12 h-12 object-cover rounded-full mx-auto"
+                />
               </td>
               <td className="px-6 py-4 flex space-x-2 text-center justify-center">
                 <button

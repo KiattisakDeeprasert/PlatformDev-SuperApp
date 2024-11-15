@@ -11,7 +11,7 @@ export class Sport {
     }),
   )
   name: { th: string; en: string };
-  @Prop({ type: String, required: true })
+  @Prop({ type: String, required: false })
   sportImage: string;
 }
 export const SportSchema = SchemaFactory.createForClass(Sport);

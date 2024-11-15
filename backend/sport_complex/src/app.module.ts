@@ -24,8 +24,8 @@ import { PaymentSpecialModule } from './payment-special/payment-special.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
-      isGlobal: true, 
-      load: [configuration]
+      isGlobal: true,
+      load: [configuration],
     }),
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
@@ -39,12 +39,12 @@ import { PaymentSpecialModule } from './payment-special/payment-special.module';
       inject: [ConfigService],
       useFactory: (config: ConfigService) => [
         {
-          rootPath: join(__dirname, '..', 'uploads'),
+          rootPath: join(__dirname, '..', '..', 'uploads'),
           serveRoot: config.get('upload.apiPath'),
         },
       ],
     }),
-    MulterModule.register({storage:storageConfig}),
+    MulterModule.register({ storage: storageConfig }),
     FieldsModule,
     UsersModule,
     TimeSlotsModule,

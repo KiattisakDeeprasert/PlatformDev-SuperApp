@@ -1,4 +1,3 @@
-"server client";
 import Modal from "@shared/components/Modal";
 import { useGlobalContext } from "@shared/context/GlobalContext";
 import React, { useEffect, useState } from "react";
@@ -10,7 +9,7 @@ import { Sport } from "@/utils/SportTypes";
 
 interface SportFormProps {
   sport: Sport | null;
-  onSubmit: (formData: Sport) => Promise<void>;
+  onSubmit: (formData: FormData) => Promise<void>; // Change to FormData
   onClose: () => void;
 }
 
@@ -21,8 +20,12 @@ const SportForm: React.FC<SportFormProps> = ({ sport, onSubmit, onClose }) => {
       en: "",
       th: "",
     },
+    sportImage: "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [imageFile, setImageFile] = useState<File | null>(null); // Track image file
+
   const { addAlert } = useGlobalContext();
 
   const handleAddAlert = (
@@ -45,6 +48,7 @@ const SportForm: React.FC<SportFormProps> = ({ sport, onSubmit, onClose }) => {
   useEffect(() => {
     if (sport) {
       setFormData(sport);
+      setImagePreview(sport.sportImage);
     }
   }, [sport]);
 
@@ -52,45 +56,82 @@ const SportForm: React.FC<SportFormProps> = ({ sport, onSubmit, onClose }) => {
     event.preventDefault();
     setIsSubmitting(true);
 
-    if (!formData.name.en) {
+    // Log the form data for troubleshooting
+    console.log("Submitting form data:", formData);
+
+    // Validate that both English and Thai sport names are provided
+    if (!formData.name.en || !formData.name.th) {
       handleAddAlert(
         "ExclamationCircleIcon",
-        "English sport Missing",
-        "English sport is required",
+        "Sport Name Missing",
+        "Both English and Thai sport names are required.",
+        tAlertType.WARNING
+      );
+      setIsSubmitting(false);
+      return;
+    }
+    // Validate image file is selected
+    if (!imageFile) {
+      handleAddAlert(
+        "ExclamationCircleIcon",
+        "Image Missing",
+        "Please upload a sport image.",
+        tAlertType.WARNING
+      );
+      setIsSubmitting(false);
+      return;
+    }
+    // Validate image file type (only images allowed)
+    if (imageFile && !imageFile.type.startsWith("image/")) {
+      handleAddAlert(
+        "ExclamationCircleIcon",
+        "Invalid Image Type",
+        "Please upload a valid image file (e.g., PNG, JPG).",
         tAlertType.WARNING
       );
       setIsSubmitting(false);
       return;
     }
 
-    if (!formData.name.th) {
+    // Validate image size (optional, e.g., 5MB max)
+    if (imageFile && imageFile.size > 5 * 1024 * 1024) {
       handleAddAlert(
         "ExclamationCircleIcon",
-        "Thai sport Missing",
-        "Thai sport is required",
+        "Image Too Large",
+        "Please upload an image smaller than 5MB.",
         tAlertType.WARNING
       );
       setIsSubmitting(false);
       return;
+    }
+
+    const data = new FormData();
+    data.append("id", sport?.id || ""); // Include the ID if editing, empty for new
+    data.append("name[en]", formData.name.en);
+    data.append("name[th]", formData.name.th);
+
+    // Append image if selected
+    if (imageFile) {
+      data.append("sportImage", imageFile); // Add image file to form data
     }
 
     try {
-      await onSubmit({
-        id: sport?.id || "",
-        name: {
-          en: formData.name.en,
-          th: formData.name.th,
-        },
-      });
+      // Call the onSubmit function to send the data
+      await onSubmit(data);
 
-      setFormData({
-        id: "",
-        name: {
-          en: "",
-          th: "",
-        },
-      });
-      onClose();
+      // Show success alert
+      handleAddAlert(
+        "CheckCircleIcon",
+        "Success",
+        "Sport submitted successfully.",
+        tAlertType.SUCCESS
+      );
+
+      // Reset form after submission
+      setFormData({ id: "", name: { en: "", th: "" }, sportImage: "" });
+      setImagePreview(null);
+      setImageFile(null); // Clear the selected file
+      onClose(); // Close the form/modal
     } catch (error) {
       handleAddAlert(
         "XCircleIcon",
@@ -98,26 +139,39 @@ const SportForm: React.FC<SportFormProps> = ({ sport, onSubmit, onClose }) => {
         "Failed to submit sport. Please check the form inputs.",
         tAlertType.ERROR
       );
-      console.log(error);
+      console.error("Error creating sport:", error);
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const handleChange = (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
+  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
 
-    // Check if the name corresponds to the expected format
     if (name in formData.name) {
-      setFormData(prevData => ({
+      setFormData((prevData) => ({
         ...prevData,
         name: {
           ...prevData.name,
-          [name]: value, // Directly set the value for the corresponding language key
+          [name]: value,
         },
       }));
+    }
+  };
+
+  const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setFormData((prevData) => ({
+        ...prevData,
+        sportImage: file.name, // This is for preview purposes, you can remove it if not needed
+      }));
+      setImageFile(file); // Save the actual file
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string); // Set preview image
+      };
+      reader.readAsDataURL(file);
     }
   };
 
@@ -169,6 +223,57 @@ const SportForm: React.FC<SportFormProps> = ({ sport, onSubmit, onClose }) => {
           required
           className="w-full p-2 border border-gray-300 rounded-lg focus:ring focus:ring-blue-200 focus:border-blue-500"
         />
+      </div>
+      <div className="space-y-2 mt-2">
+        <label className="block font-medium">Sport Image</label>
+        <div className="flex items-center justify-center w-full">
+          <label
+            htmlFor="dropzone-file"
+            className="flex flex-col items-center justify-center w-full h-64 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 focus:ring focus:ring-blue-200 focus:border-blue-500"
+          >
+            {imagePreview ? (
+              <div className="w-full h-full flex justify-center items-center overflow-hidden">
+                <img
+                  src={imagePreview}
+                  alt="Sport Image Preview"
+                  className=" max-w-full max-h-full border border-gray-300 rounded-lg"
+                />
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                <svg
+                  className="w-8 h-8 mb-4 text-gray-500"
+                  aria-hidden="true"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 20 16"
+                >
+                  <path
+                    stroke="currentColor"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"
+                  />
+                </svg>
+                <p className="mb-2 text-sm text-gray-500">
+                  <span className="font-semibold">Click to upload</span> or drag
+                  and drop
+                </p>
+                <p className="text-xs text-gray-500">
+                  SVG, PNG, JPG, or GIF (MAX. 800x400px)
+                </p>
+              </div>
+            )}
+            <input
+              id="dropzone-file"
+              type="file"
+              accept="image/*"
+              onChange={handleImageChange}
+              className="hidden"
+            />
+          </label>
+        </div>
       </div>
     </Modal>
   );

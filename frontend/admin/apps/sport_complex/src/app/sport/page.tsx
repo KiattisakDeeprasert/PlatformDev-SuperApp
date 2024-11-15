@@ -77,7 +77,7 @@ export default function TimeSlotPage() {
 
   const handleDelete = async () => {
     if (!sportIdToDelete) return;
-  
+
     try {
       const response = await fetch(`${apiUrl}/${sportIdToDelete}`, {
         method: "DELETE",
@@ -86,7 +86,12 @@ export default function TimeSlotPage() {
         throw new Error("Failed to delete Sport");
       }
       setSports(sports.filter((t) => t.id !== sportIdToDelete));
-      handleAddAlert("ExclamationCircleIcon", "Success", "Sport deleted successfully", tAlertType.SUCCESS);
+      handleAddAlert(
+        "ExclamationCircleIcon",
+        "Success",
+        "Sport deleted successfully",
+        tAlertType.SUCCESS
+      );
     } catch (error) {
       console.log(error);
     } finally {
@@ -95,28 +100,34 @@ export default function TimeSlotPage() {
     }
   };
 
-  const handleFormSubmit = async (sport: Sport) => {
+  const handleFormSubmit = async (formData: FormData) => {
     try {
-      const url = sport.id ? `${apiUrl}/${sport.id}` : apiUrl;
-      const method = sport.id ? "PATCH" : "POST";
+      // Ensure that ID is not being sent for new records
+      if (!formData.get("id")) {
+        formData.delete("id");
+      }
+
+      const url = formData.get("id")
+        ? `${apiUrl}/${formData.get("id")}`
+        : apiUrl;
+      const method = formData.get("id") ? "PATCH" : "POST";
 
       const response = await fetch(url, {
         method,
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(sport),
+        body: formData, // Let the browser handle the Content-Type for FormData
       });
 
       if (!response.ok) {
         throw new Error(
-          sport.id ? "Failed to update sport" : "Failed to create sport"
+          formData.get("id")
+            ? "Failed to update sport"
+            : "Failed to create sport"
         );
       }
 
       const result = await response.json();
-      if (sport.id) {
-        // Update the existing timeslot
+      if (formData.get("id")) {
+        // Update the existing sport
         setSports((prevSports) =>
           prevSports.map((t) => (t.id === result.data.id ? result.data : t))
         );
@@ -128,13 +139,13 @@ export default function TimeSlotPage() {
           tAlertType.SUCCESS
         );
       } else {
-        // Add the new timeslot
+        // Add the new sport
         setSports((prevSports) => [...prevSports, result.data]);
 
         handleAddAlert(
           "ExclamationCircleIcon",
           "Success",
-          "Sports created successfully",
+          "Sport created successfully",
           tAlertType.SUCCESS
         );
       }
@@ -143,7 +154,7 @@ export default function TimeSlotPage() {
       setSelectedSport(null);
     } catch (error) {
       console.error(
-        sport.id ? "Error updating sport:" : "Error creating sport:",
+        formData.get("id") ? "Error updating sport:" : "Error creating sport:",
         error
       );
     }

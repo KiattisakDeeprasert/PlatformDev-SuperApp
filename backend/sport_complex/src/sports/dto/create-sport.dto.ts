@@ -7,6 +7,6 @@ export class CreateSportDto {
   @ValidateNested()
   @Type(() => nameDTO)
   name: nameDTO;
-  @IsOptional()
-  sportImage: any;
+  
+  sportImage: string;
 }

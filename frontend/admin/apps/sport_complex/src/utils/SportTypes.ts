@@ -4,4 +4,6 @@ export interface Sport {
     th: string;
     en: string;
   };
+  sportImage: string;
 }
+
