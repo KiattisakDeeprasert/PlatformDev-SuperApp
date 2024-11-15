@@ -39,10 +39,11 @@ export default function SportTable({
                 <img
                   src={sport.sportImage}
                   alt={sport.name.en}
-                  className="w-12 h-12 object-cover rounded-full mx-auto"
+                  className="w-20 h-16 object-cover mx-auto rounded"
                 />
               </td>
-              <td className="px-6 py-4 flex space-x-2 text-center justify-center">
+              <td className="px-6 py-4 text-center">
+                <div className="flex justify-center space-x-2">
                 <button
                   onClick={() => onEdit(sport)}
                   className="bg-white text-black px-2 py-2 rounded-full border border-gray"
@@ -55,6 +56,7 @@ export default function SportTable({
                 >
                   <BsTrashFill className="size-5" />
                 </button>
+                </div>
               </td>
             </tr>
           ))}

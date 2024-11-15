@@ -53,7 +53,28 @@ const TransactionForm: React.FC<TimeslotFormProps> = ({
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     setIsSubmitting(true);
+     
+     if (formData.start.includes(".")) {
+      handleAddAlert(
+        "ExclamationCircleIcon",
+        "Invalid Start Time",
+        "Please do not use '.' in the time format. Use ':' instead. For example: '07:00'.",
+        tAlertType.WARNING
+      );
+      setIsSubmitting(false);
+      return;
+    }
 
+    if (formData.end.includes(".")) {
+      handleAddAlert(
+        "ExclamationCircleIcon",
+        "Invalid End Time",
+        "Please do not use '.' in the time format. Use ':' instead. For example: '07:00'.",
+        tAlertType.WARNING
+      );
+      setIsSubmitting(false);
+      return;
+    }
     if (!formData.start) {
       handleAddAlert(
         "ExclamationCircleIcon",
@@ -135,7 +156,7 @@ const TransactionForm: React.FC<TimeslotFormProps> = ({
       }
     >
       <div className="space-y-2">
-        <label className="block text-gray-700 font-medium">Start</label>
+        <label className="block font-medium">Start</label>
         <input
           type="text"
           name="start"
@@ -147,8 +168,8 @@ const TransactionForm: React.FC<TimeslotFormProps> = ({
         />
       </div>
 
-      <div className="space-y-2">
-        <label className="block text-gray-700 font-medium">End</label>
+      <div className="space-y-2 mt-2">
+        <label className="block font-medium">End</label>
         <input
           type="text"
           name="end"
@@ -158,6 +179,9 @@ const TransactionForm: React.FC<TimeslotFormProps> = ({
           required
           className="w-full p-2 border border-gray-300 rounded-lg focus:ring focus:ring-blue-200 focus:border-blue-500"
         />
+      </div>
+      <div className="space-y-2 mt-2 mb-[-2rem]">
+      <label className="block font-thin text-gray-500 dark:text-gray-400">** Please enter the time using the symbol &quot; : &quot; . Do not enter &quot; . &quot; For example: &quot; 07:00 &quot; **</label>
       </div>
     </Modal>
   );

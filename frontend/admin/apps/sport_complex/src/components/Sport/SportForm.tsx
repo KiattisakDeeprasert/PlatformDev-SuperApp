@@ -119,14 +119,6 @@ const SportForm: React.FC<SportFormProps> = ({ sport, onSubmit, onClose }) => {
       // Call the onSubmit function to send the data
       await onSubmit(data);
 
-      // Show success alert
-      handleAddAlert(
-        "CheckCircleIcon",
-        "Success",
-        "Sport submitted successfully.",
-        tAlertType.SUCCESS
-      );
-
       // Reset form after submission
       setFormData({ id: "", name: { en: "", th: "" }, sportImage: "" });
       setImagePreview(null);
@@ -200,7 +192,7 @@ const SportForm: React.FC<SportFormProps> = ({ sport, onSubmit, onClose }) => {
       }
     >
       <div className="space-y-2 mb-2">
-        <label className="block font-medium">English Sport</label>
+        <label className="block font-medium text-gray-500 dark:text-gray-400">English Sport</label>
         <input
           type="text"
           name="en"
@@ -213,7 +205,7 @@ const SportForm: React.FC<SportFormProps> = ({ sport, onSubmit, onClose }) => {
       </div>
 
       <div className="space-y-2">
-        <label className="block font-medium">Thai Sport</label>
+        <label className="block font-medium text-gray-500 dark:text-gray-400">Thai Sport</label>
         <input
           type="text"
           name="th"
@@ -224,8 +216,8 @@ const SportForm: React.FC<SportFormProps> = ({ sport, onSubmit, onClose }) => {
           className="w-full p-2 border border-gray-300 rounded-lg focus:ring focus:ring-blue-200 focus:border-blue-500"
         />
       </div>
-      <div className="space-y-2 mt-2">
-        <label className="block font-medium">Sport Image</label>
+      <div className="space-y-2 mt-2 mb-[-1rem]">
+        <label className="block font-medium text-gray-500 dark:text-gray-400">Sport Image</label>
         <div className="flex items-center justify-center w-full">
           <label
             htmlFor="dropzone-file"

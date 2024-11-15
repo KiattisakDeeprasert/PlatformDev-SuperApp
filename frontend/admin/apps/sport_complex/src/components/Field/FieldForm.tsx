@@ -71,7 +71,7 @@ const FieldForm: React.FC<FieldFormProps> = ({ field, onSubmit, onClose }) => {
     event.preventDefault();
     setIsSubmitting(true);
     setError(null);
-
+    
     if (!formData.capacity) {
       handleAddAlert(
         "ExclamationCircleIcon",
@@ -199,7 +199,7 @@ const FieldForm: React.FC<FieldFormProps> = ({ field, onSubmit, onClose }) => {
       {error && <p className="text-red-500">{error}</p>}
 
       <div className="space-y-2">
-        <label className="block text-gray-700 font-medium">Capacity</label>
+        <label className="block text-gray-700 font-medium text-gray-500 dark:text-gray-400">Capacity</label>
         <input
           type="number"
           name="capacity"
@@ -207,12 +207,13 @@ const FieldForm: React.FC<FieldFormProps> = ({ field, onSubmit, onClose }) => {
           onChange={handleChange}
           placeholder="Enter room"
           required
+          min="0"
           className="w-full p-2 border border-gray-300 rounded-lg focus:ring focus:ring-blue-200 focus:border-blue-500"
         />
       </div>
 
-      <div className="space-y-2">
-        <label className="block text-gray-700 font-medium">Price</label>
+      <div className="space-y-2 mt-2">
+        <label className="block text-gray-700 font-medium text-gray-500 dark:text-gray-400">Price</label>
         <input
           type="number"
           name="price"
@@ -220,12 +221,13 @@ const FieldForm: React.FC<FieldFormProps> = ({ field, onSubmit, onClose }) => {
           onChange={handleChange}
           placeholder="Enter floor"
           required
+          min="0"
           className="w-full p-2 border border-gray-300 rounded-lg focus:ring focus:ring-blue-200 focus:border-blue-500"
         />
       </div>
 
-      <div className="space-y-2">
-        <label className="block text-gray-700 font-medium">Select Type</label>
+      <div className="space-y-2 mt-2">
+        <label className="block text-gray-700 font-medium text-gray-500 dark:text-gray-400">Select Type</label>
         <select
           name="type"
           value={formData.type.id || ""}
@@ -244,8 +246,8 @@ const FieldForm: React.FC<FieldFormProps> = ({ field, onSubmit, onClose }) => {
         </select>
       </div>
 
-      <div className="space-y-2">
-        <label className="block text-gray-700 font-medium">Status</label>
+      <div className="space-y-2 mt-2 mb-[-1rem]">
+        <label className="block text-gray-700 font-medium text-gray-500 dark:text-gray-400">Status</label>
         <select
           name="status"
           value={formData.status}
