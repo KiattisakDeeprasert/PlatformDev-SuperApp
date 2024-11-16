@@ -1,6 +1,7 @@
 import { BsTrashFill } from "react-icons/bs";
 import { LiaPenFancySolid } from "react-icons/lia";
 import { Reservation } from "@/utils/ReservationTypes";
+import { GrView } from "react-icons/gr";
 
 interface ReservationTableProps {
   reservations: Reservation[];
@@ -73,10 +74,10 @@ export default function ReservationTable({
                   onClick={() => onEdit(reservation)}
                   className="bg-white text-black px-2 py-2 rounded-full border border-gray"
                 >
-                  <LiaPenFancySolid className="size-5" />
+                  <GrView className="size-5" />
                 </button>
                 <button
-                  onClick={() => onDelete(reservation.id)}
+                  onClick={() => onDelete(reservation.id || "")}
                   className="bg-black text-white px-2 py-2 rounded-full border border-gray"
                 >
                   <BsTrashFill className="size-5" />

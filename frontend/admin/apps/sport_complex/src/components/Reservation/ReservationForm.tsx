@@ -1,7 +1,6 @@
-import { Field } from "@/utils/FieldTypes"; // Assuming you have a Field type
+import { Field } from "@/utils/FieldTypes";
 import { Reservation } from "@/utils/ReservationTypes";
 import { Timeslot } from "@/utils/TimeSlotTypes";
-
 import { User } from "@/utils/UserTypes";
 import * as Icons from "@heroicons/react/24/outline";
 import Modal from "@shared/components/Modal";
@@ -168,16 +167,19 @@ const ReservationForm: React.FC<ReservationFormProps> = ({
   return (
     <Modal
       isOpen={true}
-      title={reservation ? "Edit Reservation" : "Create Reservation"}
+      title={reservation ? "View Reservation" : "Create Reservation"}
       onClose={onClose}
       actions={
         <div className="flex justify-between">
-          <button
-            onClick={handleSubmit}
-            className="bg-black text-white px-2 py-2 rounded-full"
-          >
-            <LiaCheckCircle className="size-6" />
-          </button>
+          {/* Hide the submit button for edit mode */}
+          {!reservation && (
+            <button
+              onClick={handleSubmit}
+              className="bg-black text-white px-2 py-2 rounded-full"
+            >
+              <LiaCheckCircle className="size-6" />
+            </button>
+          )}
           <button
             onClick={onClose}
             className="bg-gray-500 text-white px-2 py-2 rounded-full ml-6"
@@ -190,7 +192,9 @@ const ReservationForm: React.FC<ReservationFormProps> = ({
       {error && <p className="text-red-500">{error}</p>}
 
       <div className="space-y-2">
-        <label className="block text-gray-500 dark:text-gray-400 font-medium">Username</label>
+        <label className="block text-gray-500 dark:text-gray-400 font-medium">
+          Username
+        </label>
         <input
           type="text"
           name="username"
@@ -198,17 +202,21 @@ const ReservationForm: React.FC<ReservationFormProps> = ({
           onChange={handleChange}
           placeholder="Enter username"
           required
+          disabled={!!reservation} // Disable input when editing
           className="w-full p-2 border border-gray-300 rounded-lg focus:ring focus:ring-blue-200 focus:border-blue-500"
         />
       </div>
 
       <div className="space-y-2 mt-2">
-        <label className="block text-gray-500 dark:text-gray-400 font-medium">Select Field</label>
+        <label className="block text-gray-500 dark:text-gray-400 font-medium">
+          Select Field
+        </label>
         <select
           name="field"
           value={formData.field.id || ""}
           onChange={handleChange}
           required
+          disabled={!!reservation} // Disable select when editing
           className="w-full p-2 border border-gray-300 rounded-lg focus:ring focus:ring-blue-200 focus:border-blue-500"
         >
           <option value="" disabled>
@@ -223,12 +231,15 @@ const ReservationForm: React.FC<ReservationFormProps> = ({
       </div>
 
       <div className="space-y-2 mt-2 mb-[-1rem]">
-        <label className="block text-gray-500 dark:text-gray-400 font-medium">Select Time</label>
+        <label className="block text-gray-500 dark:text-gray-400 font-medium">
+          Select Time
+        </label>
         <select
           name="timeSlot"
           value={formData.timeSlot.id || ""}
           onChange={handleChange}
           required
+          disabled={!!reservation} // Disable select when editing
           className="w-full p-2 border border-gray-300 rounded-lg focus:ring focus:ring-blue-200 focus:border-blue-500"
         >
           <option value="" disabled>
@@ -244,11 +255,14 @@ const ReservationForm: React.FC<ReservationFormProps> = ({
 
       {reservation && (
         <div className="space-y-2 mt-6 mb-[-1rem]">
-          <label className="block text-gray-500 dark:text-gray-400 font-medium">Status</label>
+          <label className="block text-gray-500 dark:text-gray-400 font-medium">
+            Status
+          </label>
           <select
             name="type"
             value={formData.type}
             onChange={handleChange}
+            disabled={!!reservation} // Disable select when editing
             required
             className="w-full p-2 border border-gray-300 rounded-lg focus:ring focus:ring-blue-200 focus:border-blue-500"
           >
