@@ -10,11 +10,9 @@ import { reservationType } from "../enums/reservation.enum";
 
 export class CreateReservationDto {
   @IsNotEmpty()
-  @IsMongoId()
   field: string;
 
   @IsNotEmpty()
-  @IsMongoId()
   user: string;
 
   @IsString()

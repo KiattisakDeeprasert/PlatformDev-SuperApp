@@ -68,7 +68,9 @@ export default function FieldTimeSlotPage() {
 
   // Confirm dialog states
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
-  const [fieldTimeSlotIdToDelete, setFieldTimeSlotIdToDelete] = useState<string | null>(null);
+  const [fieldTimeSlotIdToDelete, setFieldTimeSlotIdToDelete] = useState<
+    string | null
+  >(null);
 
   useEffect(() => {
     const fetchData = async () => {

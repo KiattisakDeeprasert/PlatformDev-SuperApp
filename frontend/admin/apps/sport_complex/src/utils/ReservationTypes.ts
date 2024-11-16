@@ -1,21 +1,12 @@
-import { Type } from "./Types";
+import { Field } from "./FieldTypes";
+import { Timeslot } from "./TimeSlotTypes";
+import { User } from "./UserTypes";
 
 export interface Reservation {
-  id: string;
-  user: {
-    id: string;
-    username: string;
-  };
-  field: {
-    id: string;
-    type: Type;
-    price: number;
-  };
-  timeSlot: {
-    id: string;
-    start: string;
-    end: string;
-  };
+  id?: string;
+  user: User
+  field: Field
+  timeSlot: Timeslot
   type: "pending"|"confirmed"|"cancelled";
   dateTime: string;
 }

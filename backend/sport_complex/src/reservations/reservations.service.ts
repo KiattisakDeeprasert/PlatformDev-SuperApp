@@ -64,7 +64,6 @@ export class ReservationsService {
     try {
       createReservationDto.type = reservationType.pending;
 
-      // Find the field by ID and ensure it's not null
       const field = await this.fieldModel.findById(createReservationDto.field);
       if (!field) {
         throw new NotFoundException(
@@ -72,7 +71,6 @@ export class ReservationsService {
         );
       }
 
-      // Find the FieldTimeSlot for the given field and timeslot
       const fieldTimeSlot = await this.fieldTimeSlotModel.findOne({
         field: createReservationDto.field,
         timeSlot: createReservationDto.timeSlot,
@@ -84,16 +82,13 @@ export class ReservationsService {
         );
       }
 
-      // If the FieldTimeSlot status is 'free', skip the conflict check
       if (fieldTimeSlot.status === FieldTimeSlotStatus.free) {
-        // Proceed with the reservation creation logic without checking capacity
       } else {
-        // Count current reservations for the given field and timeslot
         const currentReservationsCount =
           await this.reservationModel.countDocuments({
             field: createReservationDto.field,
             timeSlot: createReservationDto.timeSlot,
-            type: { $ne: reservationType.cancelled }, // Exclude cancelled reservations
+            type: { $ne: reservationType.cancelled },
           });
 
         if (currentReservationsCount >= (field as Field).capacity) {
@@ -103,7 +98,6 @@ export class ReservationsService {
         }
       }
 
-      // Find the user by username
       const user = await this.userModel.findOne({
         username: createReservationDto.user,
       });

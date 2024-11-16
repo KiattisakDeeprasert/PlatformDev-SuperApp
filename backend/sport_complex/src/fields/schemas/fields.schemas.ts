@@ -17,6 +17,7 @@ export class Field {
 
   @Prop({ type: Number, required: true })
   price: number;
+  
 }
 export const FieldSchema = SchemaFactory.createForClass(Field);
 
