@@ -6,8 +6,11 @@ import {
   Get,
   HttpStatus,
   Param,
+  ParseFilePipeBuilder,
   Patch,
   Post,
+  Req,
+  UploadedFile,
   UseInterceptors,
 } from "@nestjs/common";
 import {
@@ -19,6 +22,12 @@ import { PaymentsService } from "./payments.service";
 import { CreatePaymentDto } from "./dto/create-payment.dto";
 import { PaymentEntity } from "./entities/payment.entity";
 import { UpdatePaymentDto } from "./dto/update-payment.dto";
+import { storageConfig } from "src/app/config/storage.config";
+import { FileInterceptor } from "@nestjs/platform-express";
+
+const paymentImageUploadInterCepters = FileInterceptor('paymentImage', {
+  storage: storageConfig,
+});
 
 @Controller("payments")
 export class PaymentsController {
@@ -65,7 +74,10 @@ export class PaymentsController {
     @Param("id") id: string,
     @Body() updatePaymentDto: UpdatePaymentDto
   ) {
-    const payment = await this.paymentsService.update(id, updatePaymentDto);
+    const payment = await this.paymentsService.update(
+      id,
+      updatePaymentDto
+    );
     return createResponse(
       HttpStatus.OK,
       this.messageBuilder.build(ResponseMethod.update, { id }),

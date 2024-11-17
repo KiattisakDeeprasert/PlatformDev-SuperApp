@@ -1,10 +1,14 @@
 "use client";
+import ConfirmDialog from "@/components/Default/Confirmdialog";
 import ReservationForm from "@/components/Reservation/ReservationForm";
 import ReservationTable from "@/components/Reservation/ReservationTable";
 import { Field } from "@/utils/FieldTypes";
 import { Reservation } from "@/utils/ReservationTypes";
 import { Timeslot } from "@/utils/TimeSlotTypes";
+import * as Icons from "@heroicons/react/24/outline";
 import { User } from "@/utils/UserTypes";
+import { useGlobalContext } from "@shared/context/GlobalContext";
+import { tAlert, tAlertType } from "@shared/utils/types/Alert";
 import { useEffect, useState } from "react";
 
 const apiUrl = "http://localhost:8081/api/reservations";
@@ -87,7 +91,28 @@ export default function ReservationsPage() {
   const [fields, setFields] = useState<Field[]>([]);
   const [timeSlots, setTimeSlots] = useState<Timeslot[]>([]);
   const [users, setUsers] = useState<any[]>([]);
-
+  const [isConfirmDialogOpen, setIsConfirmDialogOpen] =
+    useState<boolean>(false);
+  const [reservationIdToDelete, setReservationIdToDelete] = useState<
+    string | null
+  >(null);
+  const handleAddAlert = (
+    iconName: keyof typeof Icons,
+    title: string,
+    message: string,
+    type: tAlertType
+  ) => {
+    const newAlert: tAlert = {
+      title: title,
+      message: message,
+      buttonText: "X",
+      iconName: iconName,
+      type: type,
+      id: Math.random().toString(36).substring(2, 9),
+    };
+    addAlert(newAlert);
+  };
+  const { addAlert } = useGlobalContext();
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
@@ -115,11 +140,24 @@ export default function ReservationsPage() {
     setCurrentReservation(reservation);
     setIsFormOpen(true);
   };
+  const confirmDelete = (reservationId: string) => {
+    setReservationIdToDelete(reservationId);
+    setIsConfirmDialogOpen(true);
+  };
 
-  const handleDelete = async (reservationId: string) => {
+  const handleDelete = async () => {
+    if (!reservationIdToDelete) return;
+
     try {
-      await fetch(`${apiUrl}/${reservationId}`, { method: "DELETE" });
-      setReservations(reservations.filter((r) => r.id !== reservationId));
+      await fetch(`${apiUrl}/${reservationIdToDelete}`, { method: "DELETE" });
+      setIsConfirmDialogOpen(false);
+      setReservationIdToDelete(null);
+      handleAddAlert(
+        "TrashIcon",
+        "Success",
+        "Reservation deleted successfully!",
+        tAlertType.SUCCESS
+      );
     } catch (error) {
       console.error("Failed to delete reservation:", error);
     }
@@ -131,6 +169,12 @@ export default function ReservationsPage() {
     const fetchedReservations = await fetchReservations();
     setReservations(fetchedReservations);
     setIsFormOpen(false); // Close the form after submission
+    handleAddAlert(
+      "TrashIcon",
+      "Success",
+      "Reservation deleted successfully!",
+      tAlertType.SUCCESS
+    );
   };
 
   if (loading) {
@@ -153,7 +197,7 @@ export default function ReservationsPage() {
           <ReservationTable
             reservations={reservations}
             onEdit={handleEdit}
-            onDelete={handleDelete}
+            onDelete={confirmDelete}
           />
         </div>
       </div>
@@ -167,6 +211,12 @@ export default function ReservationsPage() {
           onClose={() => setIsFormOpen(false)}
         />
       )}
+      <ConfirmDialog
+        isOpen={isConfirmDialogOpen}
+        onConfirm={handleDelete}
+        onClose={() => setIsConfirmDialogOpen(false)}
+        message="Are you sure you want to delete this reservation?"
+      />
     </div>
   );
 }

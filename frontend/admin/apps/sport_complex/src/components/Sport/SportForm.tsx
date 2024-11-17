@@ -56,9 +56,6 @@ const SportForm: React.FC<SportFormProps> = ({ sport, onSubmit, onClose }) => {
     event.preventDefault();
     setIsSubmitting(true);
 
-    // Log the form data for troubleshooting
-    console.log("Submitting form data:", formData);
-
     // Validate that both English and Thai sport names are provided
     if (!formData.name.en || !formData.name.th) {
       handleAddAlert(

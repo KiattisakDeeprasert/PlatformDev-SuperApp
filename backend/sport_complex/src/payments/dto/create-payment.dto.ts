@@ -7,15 +7,13 @@ import {
   IsString,
 } from 'class-validator';
 import { PaymentStatus } from '../enums/payment.enum';
-import { Types } from 'mongoose';
 
 export class CreatePaymentDto {
   @IsNotEmpty()
-  @IsMongoId()
-  reservation: Types.ObjectId;
+  reservation: string;
 
   @IsOptional()
-  paymentImage: any;
+  paymentImage?: string;
 
   @IsString()
   @IsOptional()
