@@ -11,7 +11,7 @@ import { ComplexReservationStatus } from '../enums/complex-reservation.enum';
 
 export class ComplexReservationEntity extends MongoEntity {
   @TransformId((v) => new SpecialFieldEntity(v))
-  name?: Types.ObjectId | SpecialField | null;
+  field?: Types.ObjectId | SpecialField | null;
 
   @TransformId((v) => new UserEntity(v))
   user?: Types.ObjectId | User | null;

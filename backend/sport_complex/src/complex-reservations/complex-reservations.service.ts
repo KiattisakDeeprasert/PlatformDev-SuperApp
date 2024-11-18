@@ -26,8 +26,8 @@ import { SpecialTableStatus } from 'src/special-table/enums/special-table.enum';
 
 const POPULATE_PIPE = [
   {
-    path: 'name',
-    select: ['name', 'price'],
+    path: 'field',
+    select: ['field', 'name'],
     populate: {
       path: 'name',
       select: ['name.en', 'name.th'],
@@ -71,11 +71,11 @@ export class ComplexReservationsService {
     try {
       createComplexReservationDto.status = ComplexReservationStatus.pending;
 
-      const field = await this.specialFieldModel.findById(createComplexReservationDto.name);
-      if (!field) throw new NotFoundException(`Field with ID ${createComplexReservationDto.name} not found`);
+      const field = await this.specialFieldModel.findById(createComplexReservationDto.field);
+      if (!field) throw new NotFoundException(`Field with ID ${createComplexReservationDto.field} not found`);
 
       const specialTable = await this.specialTableModel.findOne({
-        name: createComplexReservationDto.name,
+        field: createComplexReservationDto.field,
         timeSlot: createComplexReservationDto.timeSlot,
       });
       if (!specialTable) throw new NotFoundException(`SpecialTable for this field and timeslot not found`);

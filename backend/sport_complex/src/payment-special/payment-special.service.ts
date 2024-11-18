@@ -26,15 +26,15 @@ import { Timeslot } from 'src/time-slots/schemas/time-slots.schema';
 const POPULATE_PIPE = [
   {
     path: 'reservation',
-    select: ['user', 'name'],
+    select: ['user', 'field','name'],
     populate: [
       {
         path: 'user',
         select: ['username'],
       },
       {
-        path: 'name',
-        select: ['name', 'price'],
+        path: 'field',
+        select: ['field','name', 'price'],
         populate: {
           path: 'name',
           select: ['name.en', 'name.th'],
@@ -168,7 +168,7 @@ export class PaymentSpecialService {
 
         // Find the associated SpecialTable
         const specialTable = await this.specialTableModel.findOne({
-          name: reservation.name,
+          field: reservation.field,
           timeSlot: reservation.timeSlot,
         });
 

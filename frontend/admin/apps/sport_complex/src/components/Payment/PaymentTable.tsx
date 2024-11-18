@@ -1,6 +1,5 @@
 import { BsTrashFill } from "react-icons/bs";
 import { LiaPenFancySolid } from "react-icons/lia";
-import { GrView } from "react-icons/gr";
 import { Payment } from "@/utils/PaymentTypes";
 
 interface PaymentTableProps {

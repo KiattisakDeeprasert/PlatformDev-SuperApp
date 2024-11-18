@@ -11,7 +11,7 @@ import { ComplexReservationStatus } from '../enums/complex-reservation.enum';
 export class CreateComplexReservationDto {
   @IsNotEmpty()
   @IsMongoId()
-  name: string;
+  field: string;
 
   @IsNotEmpty()
   @IsMongoId()

@@ -13,7 +13,7 @@ export class ComplexReservation {
     ref: 'SpecialField',
     required: true,
   })
-  name: SpecialField | Types.ObjectId;
+  field?: SpecialField | Types.ObjectId;
 
   @Prop({
     type: String,
