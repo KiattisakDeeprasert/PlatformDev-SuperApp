@@ -113,7 +113,6 @@ const SportForm: React.FC<SportFormProps> = ({ sport, onSubmit, onClose }) => {
     }
     
     try {
-      // Call the onSubmit function to send the data
       await onSubmit(data);
 
       // Reset form after submission

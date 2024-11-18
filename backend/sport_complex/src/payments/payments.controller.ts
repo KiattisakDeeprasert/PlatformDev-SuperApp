@@ -68,7 +68,7 @@ export class PaymentsController {
       new PaymentEntity(payment),
     );
   }
-
+  @UseInterceptors(ClassSerializerInterceptor, paymentImageUploadInterCepters)
   @Patch(":id")
   async update(
     @Param("id") id: string,
@@ -83,13 +83,7 @@ export class PaymentsController {
     )
     file: Express.Multer.File
   ): Promise<any> {
-    console.log("Uploaded file:", file); // Log the file object
-    if (!file) {
-      throw new BadRequestException("File is required");
-    }
-  
     const paymentImage = file?.filename;
-    console.log("Payment image filename:", paymentImage); // Log the filename
     const dtoWithPhoto = { ...updatePaymentDto, paymentImage };
     const payment = await this.paymentsService.update(id, dtoWithPhoto);
   

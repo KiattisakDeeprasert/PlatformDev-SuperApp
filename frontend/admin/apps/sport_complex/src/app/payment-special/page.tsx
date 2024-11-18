@@ -1,15 +1,15 @@
 "use client";
 import { useEffect, useState } from "react";
-import { Payment } from "@/utils/PaymentTypes";
+import { PaymentSpecial } from "@/utils/PaymentSpecialTypes";
 import * as Icons from "@heroicons/react/24/outline";
 import { useGlobalContext } from "@shared/context/GlobalContext";
 import { tAlert, tAlertType } from "@shared/utils/types/Alert";
-import PaymentTable from "@/components/Payment/PaymentTable";
+import PaymentSpecialTable from "@/components/PaymentSpecial/PaymentSpecialTable";
 import PaymentForm from "@/components/Payment/PaymentForm";
 
-const apiUrl = "http://localhost:8081/api/payments";
+const apiUrl = "http://localhost:8081/api/payment-special";
 
-async function fetchPayments(): Promise<Payment[]> {
+async function fetchPayments(): Promise<PaymentSpecial[]> {
   try {
     const response = await fetch(apiUrl);
     if (!response.ok) {
@@ -23,13 +23,18 @@ async function fetchPayments(): Promise<Payment[]> {
   }
 }
 
-export default function PaymentPage() {
-  const [payments, setPayments] = useState<Payment[]>([]);
+export default function PaymentSpecialPage() {
+  const [payments, setPayments] = useState<PaymentSpecial[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const { addAlert } = useGlobalContext();
-  const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
+  const [selectedPayment, setSelectedPayment] = useState<PaymentSpecial | null>(
+    null
+  );
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [paymentToDelete, setPaymentToDelete] = useState<Payment | null>(null);
+  const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
+  const [paymentToDelete, setPaymentToDelete] = useState<PaymentSpecial | null>(
+    null
+  );
 
   const handleCloseModal = () => {
     setSelectedPayment(null);
@@ -66,13 +71,12 @@ export default function PaymentPage() {
       handleAddAlert(
         "ExclamationCircleIcon",
         "Payment Error",
-        `Error deleting payment.`,
+        `Error`,
         tAlertType.ERROR
       );
     }
   };
 
-  // Add Alert
   const handleAddAlert = (
     iconName: keyof typeof Icons,
     title: string,
@@ -89,6 +93,7 @@ export default function PaymentPage() {
     };
     addAlert(newAlert);
   };
+
   const handleFormSubmit = async (data: FormData) => {
     try {
       const url = selectedPayment ? `${apiUrl}/${selectedPayment.id}` : apiUrl;
@@ -140,31 +145,18 @@ export default function PaymentPage() {
     fetchData();
   }, []);
 
-  const handleEdit = (payment: Payment) => {
+  const handleEdit = (payment: PaymentSpecial) => {
     setSelectedPayment(payment);
     setIsModalOpen(true);
   };
-
-  // Loading state
-  if (loading) {
-    return <div>Loading payments...</div>;
-  }
 
   return (
     <div className="min-h-screen p-6">
       <div className="container mx-auto">
         <div className="flex justify-between items-center mb-4 px-4 border-b-2">
-          <h1 className="text-3xl font-bold mb-6">Payment Management</h1>
+          <h1 className="text-3xl font-bold mb-6">Payment-Special</h1>
         </div>
 
-        {/* Table to display payments */}
-        <PaymentTable
-          payments={payments}
-          onEdit={handleEdit}
-          onDelete={handleDelete}
-        />
-
-        {/* Payment Form Modal */}
         {isModalOpen && selectedPayment && (
           <PaymentForm
             payment={selectedPayment}
@@ -172,6 +164,13 @@ export default function PaymentPage() {
             onClose={handleCloseModal}
           />
         )}
+
+        {/* Table to display all payments */}
+        <PaymentSpecialTable
+          payments={payments}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+        />
       </div>
     </div>
   );

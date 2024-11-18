@@ -5,25 +5,25 @@ import { tAlert, tAlertType } from "@shared/utils/types/Alert";
 import { GrFormClose } from "react-icons/gr";
 import * as Icons from "@heroicons/react/24/outline";
 import { LiaCheckCircle } from "react-icons/lia";
-import { Payment } from "@/utils/PaymentTypes";
+import { PaymentSpecial } from "@/utils/PaymentSpecialTypes";
 
-interface PaymentFormProps {
-  payment: Payment;
-  onSubmit: (payment: Payment) => Promise<void>;
+interface PaymentSpecialFormProps {
+  payment: PaymentSpecial;
+  onSubmit: (payment: PaymentSpecial) => Promise<void>;
   onClose: () => void;
 }
 
-const PaymentForm: React.FC<PaymentFormProps> = ({
+const PaymentSpecialForm: React.FC<PaymentSpecialFormProps> = ({
   payment,
   onSubmit,
   onClose,
 }) => {
-  const [formData, setFormData] = useState<Payment>({
+  const [formData, setFormData] = useState<PaymentSpecial>({
     id: "",
     reservation: {
       id: "",
-      user: { username: "" },
-      field: { price: 0 },
+      user: { username: "", email: "", password: "" },
+      field: { price: 0, name: { en: "", th: "" }, specialfieldImage: "" },
     },
     status: "pending",
     paymentImage: "",
@@ -89,12 +89,11 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
       }
 
       const data = new FormData();
-
-      data.append("id", payment.id);
+      data.append("id", formData.id);
       data.append("paymentImage", paymentImage);
       data.append("reservationId", formData.reservation.id);
       data.append("status", formData.status);
-      
+
       await onSubmit(data);
       onClose();
     } catch (error) {
@@ -193,6 +192,8 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
           <option value="cancelled">Cancelled</option>
         </select>
       </div>
+
+      {/* Payment Image */}
       <div className="space-y-2 mt-2 mb-[-1rem]">
         <label className="block font-medium text-gray-500">Payment Image</label>
         <div className="flex items-center justify-center w-full">
@@ -226,4 +227,4 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
   );
 };
 
-export default PaymentForm;
+export default PaymentSpecialForm;
