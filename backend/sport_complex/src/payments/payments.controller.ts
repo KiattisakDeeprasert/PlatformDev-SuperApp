@@ -12,26 +12,26 @@ import {
   Req,
   UploadedFile,
   UseInterceptors,
-} from "@nestjs/common";
+} from '@nestjs/common';
 import {
   createResponse,
   MessageBuilder,
   ResponseMethod,
-} from "src/app/common/utils/response.util";
-import { PaymentsService } from "./payments.service";
-import { CreatePaymentDto } from "./dto/create-payment.dto";
-import { PaymentEntity } from "./entities/payment.entity";
-import { UpdatePaymentDto } from "./dto/update-payment.dto";
-import { storageConfig } from "src/app/config/storage.config";
-import { FileInterceptor } from "@nestjs/platform-express";
+} from 'src/app/common/utils/response.util';
+import { PaymentsService } from './payments.service';
+import { CreatePaymentDto } from './dto/create-payment.dto';
+import { PaymentEntity } from './entities/payment.entity';
+import { UpdatePaymentDto } from './dto/update-payment.dto';
+import { storageConfig } from 'src/app/config/storage.config';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 const paymentImageUploadInterCepters = FileInterceptor('paymentImage', {
   storage: storageConfig,
 });
 
-@Controller("payments")
+@Controller('payments')
 export class PaymentsController {
-  private readonly messageBuilder = new MessageBuilder("Payment");
+  private readonly messageBuilder = new MessageBuilder('Payment');
 
   constructor(private readonly paymentsService: PaymentsService) {}
 
@@ -42,7 +42,7 @@ export class PaymentsController {
     return createResponse(
       HttpStatus.CREATED,
       this.messageBuilder.build(ResponseMethod.create),
-      new PaymentEntity(payment)
+      new PaymentEntity(payment),
     );
   }
 
@@ -53,31 +53,39 @@ export class PaymentsController {
     return createResponse(
       HttpStatus.OK,
       this.messageBuilder.build(ResponseMethod.findAll),
-      payments.map((payment) => new PaymentEntity(payment))
+      payments.map((payment) => new PaymentEntity(payment)),
     );
   }
 
   @UseInterceptors(ClassSerializerInterceptor)
-  @Get(":id")
-  async findOne(@Param("id") id: string) {
+  @Get(':id')
+  async findOne(@Param('id') id: string) {
     const payment = await this.paymentsService.findOne(id);
     return createResponse(
       HttpStatus.OK,
       this.messageBuilder.build(ResponseMethod.findOne, { id }),
-      new PaymentEntity(payment)
+      new PaymentEntity(payment),
     );
   }
 
-  @UseInterceptors(ClassSerializerInterceptor)
+  @UseInterceptors(ClassSerializerInterceptor, paymentImageUploadInterCepters)
   @Patch(":id")
   async update(
     @Param("id") id: string,
-    @Body() updatePaymentDto: UpdatePaymentDto
-  ) {
-    const payment = await this.paymentsService.update(
-      id,
-      updatePaymentDto
-    );
+    @Body() updatePaymentDto: UpdatePaymentDto,
+    @UploadedFile(
+      new ParseFilePipeBuilder()
+        .addFileTypeValidator({ fileType: "jpeg|png" })
+        .addMaxSizeValidator({ maxSize: 255 * 1024 }) // 255 KB limit
+        .build({
+          errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+        })
+    )
+    file: Express.Multer.File
+  ): Promise<any> {
+    const paymentImage = file?.filename;
+    const dtoWithPhoto = { ...updatePaymentDto, paymentImage };
+    const payment = await this.paymentsService.update(id, dtoWithPhoto);
     return createResponse(
       HttpStatus.OK,
       this.messageBuilder.build(ResponseMethod.update, { id }),
@@ -86,13 +94,13 @@ export class PaymentsController {
   }
 
   @UseInterceptors(ClassSerializerInterceptor)
-  @Delete(":id")
-  async remove(@Param("id") id: string) {
+  @Delete(':id')
+  async remove(@Param('id') id: string) {
     const payment = await this.paymentsService.remove(id);
     return createResponse(
       HttpStatus.OK,
       this.messageBuilder.build(ResponseMethod.remove, { id }),
-      new PaymentEntity(payment)
+      new PaymentEntity(payment),
     );
   }
 }

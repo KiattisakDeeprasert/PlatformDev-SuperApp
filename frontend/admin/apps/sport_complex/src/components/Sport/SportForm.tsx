@@ -55,7 +55,7 @@ const SportForm: React.FC<SportFormProps> = ({ sport, onSubmit, onClose }) => {
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     setIsSubmitting(true);
-
+    
     // Validate that both English and Thai sport names are provided
     if (!formData.name.en || !formData.name.th) {
       handleAddAlert(
@@ -111,7 +111,7 @@ const SportForm: React.FC<SportFormProps> = ({ sport, onSubmit, onClose }) => {
     if (imageFile) {
       data.append("sportImage", imageFile); // Add image file to form data
     }
-
+    
     try {
       // Call the onSubmit function to send the data
       await onSubmit(data);

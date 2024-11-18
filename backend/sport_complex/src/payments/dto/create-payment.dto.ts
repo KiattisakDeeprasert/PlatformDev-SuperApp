@@ -12,8 +12,7 @@ export class CreatePaymentDto {
   @IsNotEmpty()
   reservation: string;
 
-  @IsOptional()
-  paymentImage?: string;
+  paymentImage: string;
 
   @IsString()
   @IsOptional()

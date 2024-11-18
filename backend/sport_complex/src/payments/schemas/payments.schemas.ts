@@ -22,13 +22,13 @@ export class Payment {
   })
   status: PaymentStatus;
 
-  @Prop({ type: String, required: false })
+  @Prop({ type: String})
   paymentImage: string;
 
   @Prop({ type: Date, required: true, default: Date.now })
   dateTime?: Date;
   
-  _id: string;
+  id: string;
 }
 export const PaymentSchema = SchemaFactory.createForClass(Payment);
 PaymentSchema.set("toJSON", { flattenObjectIds: true, versionKey: false });

@@ -23,13 +23,14 @@ async function fetchPayments(): Promise<Payment[]> {
   }
 }
 
-export default function ReservationsPage() {
+export default function PaymentPage() {
   const [payments, setPayments] = useState<Payment[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const { addAlert } = useGlobalContext();
-
   const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
+  const [paymentToDelete, setPaymentToDelete] = useState<Payment | null>(null);
 
   const handleCreate = () => {
     setSelectedPayment({
@@ -38,7 +39,7 @@ export default function ReservationsPage() {
       status: "pending",
       paymentImage: "",
       dateTime: new Date().toISOString(),
-    }); // Default values for a new payment
+    });
     setIsModalOpen(true);
   };
 
@@ -46,7 +47,6 @@ export default function ReservationsPage() {
     setSelectedPayment(payment);
     setIsModalOpen(true);
   };
-
   const handleCloseModal = () => {
     setSelectedPayment(null);
     setIsModalOpen(false);
@@ -62,16 +62,30 @@ export default function ReservationsPage() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(`Failed to delete payment: ${errorData.message || response.statusText}`);
+        throw new Error(
+          `Failed to delete payment: ${
+            errorData.message || response.statusText
+          }`
+        );
       }
 
       setPayments((prevPayments) =>
         prevPayments.filter((payment) => payment.id !== paymentId)
       );
-      handleAddAlert("TrashIcon", "Payment Deleted", "The payment has been deleted successfully.", tAlertType.SUCCESS);
+      handleAddAlert(
+        "TrashIcon",
+        "Payment Deleted",
+        "The payment has been deleted successfully.",
+        tAlertType.SUCCESS
+      );
     } catch (error) {
       console.error("Failed to delete payment:", error);
-      handleAddAlert("ExclamationCircleIcon", "Payment Error", `Error: ${error.message}`, tAlertType.ERROR);
+      handleAddAlert(
+        "ExclamationCircleIcon",
+        "Payment Error",
+        `Error`,
+        tAlertType.ERROR
+      );
     }
   };
 
@@ -113,23 +127,26 @@ export default function ReservationsPage() {
 
   async function savePayment(payment: Payment) {
     try {
-      const url = payment.id ? `${apiUrl}/${payment.id}` : apiUrl; // Create if no ID, else Update (PATCH)
-      const method = payment.id ? "PATCH" : "POST";
+      const url = `${apiUrl}/${payment.id}`;
       const response = await fetch(url, {
-        method: method,
+        method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payment),
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(`Failed to save payment: ${errorData.message || response.statusText}`);
+        throw new Error(
+          `Failed to save payment: ${errorData.message || response.statusText}`
+        );
       }
 
       handleAddAlert(
         "CheckCircleIcon",
         payment.id ? "Payment Updated" : "Payment Created",
-        `The payment has been ${payment.id ? "updated" : "created"} successfully.`,
+        `The payment has been ${
+          payment.id ? "updated" : "created"
+        } successfully.`,
         tAlertType.SUCCESS
       );
     } catch (error) {
@@ -137,7 +154,7 @@ export default function ReservationsPage() {
       handleAddAlert(
         "ExclamationCircleIcon",
         "Payment Error",
-        `Error: ${error.message}`,
+        `Error`,
         tAlertType.ERROR
       );
     }
@@ -152,12 +169,6 @@ export default function ReservationsPage() {
       <div className="container mx-auto">
         <div className="flex justify-between items-center mb-4 px-4 border-b-2">
           <h1 className="text-3xl font-bold mb-6">Payment</h1>
-          <button
-            className="bg-black text-white px-4 py-2 rounded-full shadow-md hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-white mb-6"
-            onClick={handleCreate}
-          >
-            New Payment
-          </button>
         </div>
 
         <div className="flex flex-wrap justify-start">

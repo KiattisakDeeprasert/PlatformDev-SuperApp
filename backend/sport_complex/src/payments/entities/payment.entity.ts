@@ -8,7 +8,7 @@ import { ReservationEntity } from "src/reservations/entities/reservation.entity"
 
 export class PaymentEntity extends MongoEntity {
   @TransformId((v) => new ReservationEntity(v))
-  reservation?: Types.ObjectId | Reservation | null;
+  reservation: Types.ObjectId | Reservation | null;
 
   @TransformUrl({ type: "string" })
   paymentImage: string;

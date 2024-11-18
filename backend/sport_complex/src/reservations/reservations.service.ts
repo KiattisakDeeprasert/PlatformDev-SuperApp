@@ -126,14 +126,14 @@ export class ReservationsService {
         async () => {
           try {
             const existingPayment = await this.paymentsService.findOne(
-              payment._id,
+              payment.id,
             );
             if (
               existingPayment &&
               existingPayment.status === PaymentStatus.pending
             ) {
               // Update payment and reservation statuses to cancelled
-              await this.paymentsService.update(payment._id, {
+              await this.paymentsService.update(payment.id, {
                 status: PaymentStatus.cancelled,
               });
               const reservationToCancel = await this.reservationModel.findById(

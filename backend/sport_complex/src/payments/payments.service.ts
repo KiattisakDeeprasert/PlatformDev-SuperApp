@@ -14,7 +14,7 @@ import {
 } from 'src/app/common/utils/error.util';
 import { InjectModel } from '@nestjs/mongoose';
 import { Payment } from './schemas/payments.schemas';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { Reservation } from 'src/reservations/schemas/reservation.schemas';
 import { PaymentStatus } from './enums/payment.enum';
 import { reservationType } from 'src/reservations/enums/reservation.enum';
@@ -178,57 +178,94 @@ export class PaymentsService {
     id: string,
     updatePaymentDto: UpdatePaymentDto,
   ): Promise<Payment> {
+    if (!Types.ObjectId.isValid(id)) {
+      throw new NotFoundException('Invalid Payment ID');
+    }
+  
     const exists = await this.paymentModel.exists({ _id: id });
-
+  
     if (!exists) {
       throw new NotFoundException(
         this.errorBuilder.build(ErrorMethod.notFound, { id }),
       );
     }
-
+  
     const payment = await this.paymentModel.findById(id);
     if (!payment) {
       throw new NotFoundException('Payment not found');
     }
-
+  
     const { paymentImage, reservation: reservationId } = updatePaymentDto;
-
+  
     if (paymentImage) {
       payment.paymentImage = paymentImage;
-    }
-
-    // Update the status based on whether the paymentImage is provided
-    if (paymentImage) {
       payment.status = PaymentStatus.completed;
     } else {
       payment.status = PaymentStatus.cancelled;
     }
-
-    await payment.save(); // Save payment changes
-
-    // Handle reservation update if reservationId is provided
-    if (reservationId) {
+  
+    await payment.save();
+  
+    // Check if the payment status is cancelled
+    if (payment.status === PaymentStatus.cancelled && reservationId) {
+      const validReservationId = Types.ObjectId.isValid(reservationId)
+        ? new Types.ObjectId(reservationId)
+        : null;
+  
+      if (!validReservationId) {
+        throw new NotFoundException('Invalid Reservation ID');
+      }
+  
       const reservation = await this.reservationModel
-        .findById(reservationId)
+        .findById(validReservationId)
         .populate('timeSlot');
-
+  
       if (!reservation) {
         throw new NotFoundException('Reservation not found');
       }
-
-      reservation.type = reservationType.confirmed;
+  
+      // Update reservation status to cancelled
+      reservation.type = reservationType.cancelled;
       await reservation.save();
-
+  
       const fieldTimeSlot = await this.fieldTimeSlotModel.findOne({
         field: reservation.field,
         timeSlot: reservation.timeSlot,
       });
-
+  
+      if (fieldTimeSlot) {
+        fieldTimeSlot.status = FieldTimeSlotStatus.free;
+        await fieldTimeSlot.save();
+      }
+    } else if (reservationId) {
+      const validReservationId = Types.ObjectId.isValid(reservationId)
+        ? new Types.ObjectId(reservationId)
+        : null;
+  
+      if (!validReservationId) {
+        throw new NotFoundException('Invalid Reservation ID');
+      }
+  
+      const reservation = await this.reservationModel
+        .findById(validReservationId)
+        .populate('timeSlot');
+  
+      if (!reservation) {
+        throw new NotFoundException('Reservation not found');
+      }
+  
+      reservation.type = reservationType.confirmed;
+      await reservation.save();
+  
+      const fieldTimeSlot = await this.fieldTimeSlotModel.findOne({
+        field: reservation.field,
+        timeSlot: reservation.timeSlot,
+      });
+  
       if (fieldTimeSlot) {
         fieldTimeSlot.status = FieldTimeSlotStatus.reserved;
         await fieldTimeSlot.save();
-
-        // Check if timeSlot is populated with start and end properties
+  
         if (this.isTimeslotPopulated(reservation.timeSlot)) {
           const startTime = this.convertTimeslotStartToTime(
             reservation.timeSlot.start,
@@ -237,9 +274,8 @@ export class PaymentsService {
             reservation.timeSlot.end,
           );
           const now = new Date();
-
+  
           if (startTime && endTime) {
-            // Set timeout to change status to in_use at start time
             const startDelay = startTime.getTime() - now.getTime();
             if (startDelay > 0) {
               setTimeout(async () => {
@@ -257,8 +293,7 @@ export class PaymentsService {
                 }
               }, startDelay);
             }
-
-            // Set timeout to change status to free at end time
+  
             const endDelay = endTime.getTime() - now.getTime();
             if (endDelay > 0) {
               setTimeout(async () => {
@@ -282,9 +317,10 @@ export class PaymentsService {
         }
       }
     }
-
+  
     return await this.paymentModel.findById(id).lean();
   }
+  
 
   // Helper function to check if timeSlot is populated with start and end properties
   private isTimeslotPopulated(timeSlot: any): timeSlot is Timeslot {

@@ -8,8 +8,8 @@ import { LiaCheckCircle } from "react-icons/lia";
 import { Payment } from "@/utils/PaymentTypes";
 
 interface PaymentFormProps {
-  payment: Payment; // ใช้ Payment ทั้งก้อนเพื่อส่งข้อมูลทั้งหมด
-  onSubmit: (paymentData: Payment) => Promise<void>;
+  payment: Payment;
+  onSubmit: (payment: Payment) => Promise<void>;
   onClose: () => void;
 }
 
@@ -17,6 +17,7 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
   payment,
   onSubmit,
   onClose,
+  
 }) => {
   const [formData, setFormData] = useState<Payment>({
     id: "",
@@ -31,9 +32,10 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
   });
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [paymentImage, setPaymentImage] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const { addAlert } = useGlobalContext();
+
   const handleAddAlert = (
     iconName: keyof typeof Icons,
     title: string,
@@ -63,12 +65,12 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
     if (file) {
       setFormData((prevData) => ({
         ...prevData,
-        paymentImage: file.name, // This is for preview purposes, you can remove it if not needed
+        paymentImage: file.name,
       }));
-      setImageFile(file); // Save the actual file
+      setPaymentImage(file);
       const reader = new FileReader();
       reader.onloadend = () => {
-        setImagePreview(reader.result as string); // Set preview image
+        setImagePreview(reader.result as string);
       };
       reader.readAsDataURL(file);
     }
@@ -77,38 +79,39 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     setIsSubmitting(true);
-  
+
     try {
-      console.log("Form Data:", formData); // Add this to debug the full form data
-      
-      if (!formData.reservation?.id) {
-        throw new Error("Reservation ID is required.");
-      }
-  
-      if (!imageFile) {
-        throw new Error("Payment image is required.");
-      }
-  
-      const formDataToSend = new FormData();
-      formDataToSend.append('paymentImage', imageFile);
-      formDataToSend.append('reservationId', formData.reservation.id);
-      formDataToSend.append('status', formData.status);
-      formDataToSend.append('dateTime', formData.dateTime);
-  
-      await onSubmit(formDataToSend);
-      onClose();
+        // Ensure a file is selected
+        if (!paymentImage) {
+            throw new Error("Payment image is required.");
+        }
+
+        const formDataToSend = new FormData();
+
+        // Append the file and other fields
+        formDataToSend.append("paymentImage", paymentImage);
+        formDataToSend.append("reservationId", formData.reservation.id);
+        formDataToSend.append("status", formData.status);
+        formDataToSend.append("dateTime", formData.dateTime);
+
+        console.log("Form Data to Send:", Array.from(formDataToSend.entries()));
+
+        await onSubmit(formDataToSend as unknown as Payment);
+        onClose();
     } catch (error) {
-      handleAddAlert(
-        "XCircleIcon",
-        "Error",
-        error.message || "Failed to update payment. Please try again.",
-        tAlertType.ERROR
-      );
-      setError("ไม่สามารถอัปเดตข้อมูลการชำระเงินได้ กรุณาลองอีกครั้ง");
+        console.error(error);
+        handleAddAlert(
+            "XCircleIcon",
+            "Error",
+            error.message || "Failed to update payment. Please try again.",
+            tAlertType.ERROR
+        );
+        setError("Unable to update payment information. Please try again.");
     } finally {
-      setIsSubmitting(false);
+        setIsSubmitting(false);
     }
-  };
+};
+
   
 
   const handleChange = (
@@ -149,7 +152,7 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
 
       {/* Reservation ID */}
       <div className="space-y-2">
-        <label className="block text-gray-500 font-medium">
+        <label className="block text-gray-500 font-medium" >
           Reservation ID
         </label>
         <p className="p-2 border border-gray-300 rounded-lg">
@@ -173,7 +176,15 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
         </p>
       </div>
 
-      {/* Payment Status */}
+      
+
+      <div className="space-y-2 mt-4">
+        <label className="block text-gray-500 font-medium">DateTime</label>
+        <p className="p-2 border border-gray-300 rounded-lg">
+          {new Date(formData.dateTime).toLocaleString()}
+        </p>
+      </div>
+
       <div className="space-y-2 mt-4">
         <label className="block text-gray-500 font-medium">Status</label>
         <select
@@ -187,14 +198,7 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
           <option value="cancelled">Cancelled</option>
         </select>
       </div>
-
-      <div className="space-y-2 mt-4">
-        <label className="block text-gray-500 font-medium">DateTime</label>
-        <p className="p-2 border border-gray-300 rounded-lg">
-          {new Date(formData.dateTime).toLocaleString()}
-        </p>
-      </div>
-      <div className="space-y-2 mt-2">
+      <div className="space-y-2 mt-2 mb-[-1rem]">
         <label className="block font-medium text-gray-500">Payment Image</label>
         <div className="flex items-center justify-center w-full">
           <label
