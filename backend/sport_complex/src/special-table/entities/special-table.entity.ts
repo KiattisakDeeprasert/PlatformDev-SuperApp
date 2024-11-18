@@ -9,7 +9,7 @@ import { SpecialField } from 'src/special-field/schemas/special-field.schemas';
 
 export class SpecialTableEntity extends MongoEntity {
   @TransformId((v) => new SpecialFieldEntity(v))
-  name?: Types.ObjectId | SpecialField | null;
+  field?: Types.ObjectId | SpecialField | null;
 
   @TransformId((v) => new TimeslotEntity(v))
   timeSlot?: Types.ObjectId | Timeslot | null;

@@ -43,10 +43,6 @@ export default function PaymentPage() {
     setIsModalOpen(true);
   };
 
-  const handleEdit = (payment: Payment) => {
-    setSelectedPayment(payment);
-    setIsModalOpen(true);
-  };
   const handleCloseModal = () => {
     setSelectedPayment(null);
     setIsModalOpen(false);
@@ -118,20 +114,41 @@ export default function PaymentPage() {
     fetchData();
   }, []);
 
+  const handleEdit = (payment: Payment) => {
+    setSelectedPayment(payment);
+    setIsModalOpen(true);
+  };
+
   const handleFormSubmit = async (payment: Payment) => {
+    console.log("Submitting payment for edit:", payment); // Debugging line
+    console.log("Payment object received:", payment); 
+    if (!payment || !payment.id) {
+      console.error("Payment or Payment ID is missing for editing.");
+      return;
+    }
     await savePayment(payment);
     const fetchedPayments = await fetchPayments();
     setPayments(fetchedPayments);
     setIsModalOpen(false);
   };
 
+  // Function to handle saving a payment using PATCH request
   async function savePayment(payment: Payment) {
     try {
       const url = `${apiUrl}/${payment.id}`;
+      const formData = new FormData();
+      if (!payment || !payment.id) {
+        console.error("Payment object or ID is undefined");
+        return;
+      }
+      // Append fields to formData
+      formData.append("reservationId", payment.reservation.id);
+      formData.append("status", payment.status);
+      formData.append("paymentImage", payment.paymentImage);
+
       const response = await fetch(url, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payment),
+        body: formData,
       });
 
       if (!response.ok) {
@@ -140,13 +157,13 @@ export default function PaymentPage() {
           `Failed to save payment: ${errorData.message || response.statusText}`
         );
       }
-
+      setPayments((prevPayments) =>
+        prevPayments.map((t) => (t.id === payment.id ? payment : t))
+      );
       handleAddAlert(
         "CheckCircleIcon",
-        payment.id ? "Payment Updated" : "Payment Created",
-        `The payment has been ${
-          payment.id ? "updated" : "created"
-        } successfully.`,
+        "Payment Updated",
+        "The payment has been updated successfully.",
         tAlertType.SUCCESS
       );
     } catch (error) {
@@ -154,7 +171,7 @@ export default function PaymentPage() {
       handleAddAlert(
         "ExclamationCircleIcon",
         "Payment Error",
-        `Error`,
+        "Failed to update payment",
         tAlertType.ERROR
       );
     }

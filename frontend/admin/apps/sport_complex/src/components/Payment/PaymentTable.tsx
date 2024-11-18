@@ -73,7 +73,8 @@ export default function PaymentTable({
               <td className="px-6 py-4 text-center">
                 {new Date(payment.dateTime).toLocaleString()}
               </td>
-              <td className="px-6 py-4 flex space-x-2 text-center justify-center">
+              <td className="px-6 py-4 text-center justify-center">
+              <div className="flex justify-center space-x-2">
                 <button
                   onClick={() => onEdit(payment)}
                   className="bg-white text-black px-2 py-2 rounded-full border border-gray"
@@ -86,6 +87,7 @@ export default function PaymentTable({
                 >
                   <BsTrashFill className="size-5" />
                 </button>
+              </div>
               </td>
             </tr>
           ))}

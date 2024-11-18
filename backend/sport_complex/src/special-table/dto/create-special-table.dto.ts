@@ -4,7 +4,7 @@ import { SpecialTableStatus } from "../enums/special-table.enum";
 export class CreateSpecialTableDto {
   @IsNotEmpty()
   @IsMongoId()
-  name: string;
+  field: string;
 
   @IsNotEmpty()
   @IsMongoId()

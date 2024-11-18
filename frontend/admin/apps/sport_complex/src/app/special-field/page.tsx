@@ -1,20 +1,20 @@
 "use client";
-import ConfirmDialog from "@/components/Default/Confirmdialog";
-import SportForm from "@/components/Sport/SportForm";
-import SportTable from "@/components/Sport/SportTable";
-import { Sport } from "@/utils/SportTypes";
+import { useState, useEffect } from "react";
+import SpecialFieldForm from "@/components/SpecialField/SpecialFieldForm";
+import SpecialFieldTable from "@/components/SpecialField/SpecialFieldTable";
+import { SpecialField } from "@/utils/SpecialFieldTypes";
 import * as Icons from "@heroicons/react/24/outline";
 import { useGlobalContext } from "@shared/context/GlobalContext";
 import { tAlert, tAlertType } from "@shared/utils/types/Alert";
-import { useEffect, useState } from "react";
+import ConfirmDialog from "@/components/Default/Confirmdialog";
 
-const apiUrl = "http://localhost:8081/api/sports";
+const apiUrl = "http://localhost:8081/api/special-field";
 
-async function fetchSport(): Promise<Sport[]> {
+async function fetchSpecialFields(): Promise<SpecialField[]> {
   try {
     const response = await fetch(apiUrl);
     if (!response.ok) {
-      throw new Error("Failed to fetch timeslot");
+      throw new Error("Failed to fetch special fields");
     }
     const result = await response.json();
     return result.data;
@@ -24,19 +24,19 @@ async function fetchSport(): Promise<Sport[]> {
   }
 }
 
-export default function TimeSlotPage() {
+export default function SpecialFieldPage() {
   const { addAlert } = useGlobalContext();
-  const [sports, setSports] = useState<Sport[]>([]);
+  const [specialFields, setSpecialFields] = useState<SpecialField[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-  const [selectedSport, setSelectedSport] = useState<Sport | null>(null);
+  const [selectedSpecialField, setSelectedSpecialField] = useState<SpecialField | null>(null);
   const [isFormOpen, setIsFormOpen] = useState<boolean>(false);
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
-  const [sportIdToDelete, setSportIdToDelete] = useState<string | null>(null);
+  const [specialFieldIdToDelete, setSpecialFieldIdToDelete] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
-      const fetchedSports = await fetchSport();
-      setSports(fetchedSports);
+      const fetchedSpecialFields = await fetchSpecialFields();
+      setSpecialFields(fetchedSpecialFields);
       setLoading(false);
     };
 
@@ -61,47 +61,48 @@ export default function TimeSlotPage() {
   };
 
   const handleCreate = () => {
-    setSelectedSport(null);
+    setSelectedSpecialField(null);
     setIsFormOpen(true);
   };
 
-  const handleEdit = (sport: Sport) => {
-    setSelectedSport(sport);
+  const handleEdit = (specialField: SpecialField) => {
+    setSelectedSpecialField(specialField);
     setIsFormOpen(true);
   };
 
-  const confirmDelete = (sportId: string) => {
-    setSportIdToDelete(sportId);
+  const confirmDelete = (specialFieldId: string) => {
+    setSpecialFieldIdToDelete(specialFieldId);
     setIsConfirmDialogOpen(true);
   };
 
   const handleDelete = async () => {
-    if (!sportIdToDelete) return;
+    if (!specialFieldIdToDelete) return;
 
     try {
-      const response = await fetch(`${apiUrl}/${sportIdToDelete}`, {
+      const response = await fetch(`${apiUrl}/${specialFieldIdToDelete}`, {
         method: "DELETE",
       });
       if (!response.ok) {
-        throw new Error("Failed to delete Sport");
+        throw new Error("Failed to delete special field");
       }
-      setSports(sports.filter((t) => t.id !== sportIdToDelete));
+      setSpecialFields(specialFields.filter((sf) => sf.id !== specialFieldIdToDelete));
       handleAddAlert(
         "ExclamationCircleIcon",
         "Success",
-        "Sport deleted successfully",
+        "Special field deleted successfully",
         tAlertType.SUCCESS
       );
     } catch (error) {
       console.log(error);
     } finally {
       setIsConfirmDialogOpen(false);
-      setSportIdToDelete(null);
+      setSpecialFieldIdToDelete(null);
     }
   };
 
   const handleFormSubmit = async (formData: FormData) => {
     try {
+      // Ensure that ID is not being sent for new records
       if (!formData.get("id")) {
         formData.delete("id");
       }
@@ -119,41 +120,41 @@ export default function TimeSlotPage() {
       if (!response.ok) {
         throw new Error(
           formData.get("id")
-            ? "Failed to update sport"
-            : "Failed to create sport"
+            ? "Failed to update special field"
+            : "Failed to create special field"
         );
       }
 
       const result = await response.json();
       if (formData.get("id")) {
-        // Update the existing sport
-        setSports((prevSports) =>
-          prevSports.map((t) => (t.id === result.data.id ? result.data : t))
+        // Update the existing special field
+        setSpecialFields((prevSpecialFields) =>
+          prevSpecialFields.map((sf) => (sf.id === result.data.id ? result.data : sf))
         );
 
         handleAddAlert(
           "ExclamationCircleIcon",
           "Success",
-          "Sport updated successfully",
+          "Special field updated successfully",
           tAlertType.SUCCESS
         );
       } else {
-        // Add the new sport
-        setSports((prevSports) => [...prevSports, result.data]);
+        // Add the new special field
+        setSpecialFields((prevSpecialFields) => [...prevSpecialFields, result.data]);
 
         handleAddAlert(
           "ExclamationCircleIcon",
           "Success",
-          "Sport created successfully",
+          "Special field created successfully",
           tAlertType.SUCCESS
         );
       }
 
       setIsFormOpen(false);
-      setSelectedSport(null);
+      setSelectedSpecialField(null);
     } catch (error) {
       console.error(
-        formData.get("id") ? "Error updating sport:" : "Error creating sport:",
+        formData.get("id") ? "Error updating special field:" : "Error creating special field:",
         error
       );
     }
@@ -167,17 +168,17 @@ export default function TimeSlotPage() {
     <div className="min-h-screen p-6">
       <div className="container mx-auto">
         <div className="flex justify-between items-center mb-4 px-4 border-b-2">
-          <h1 className="text-3xl font-bold mb-6">Sport</h1>
+          <h1 className="text-3xl font-bold mb-6">Special Fields</h1>
           <button
             onClick={handleCreate}
             className="bg-black text-white px-4 py-2 rounded-full shadow-md hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-white mb-6"
           >
-            New Sport
+            New Special Field
           </button>
         </div>
         <div className="flex flex-wrap justify-start">
-          <SportTable
-            sports={sports}
+          <SpecialFieldTable
+            specialFields={specialFields}
             onEdit={handleEdit}
             onDelete={confirmDelete}
           />
@@ -186,8 +187,8 @@ export default function TimeSlotPage() {
         {isFormOpen && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-lg">
-              <SportForm
-                sport={selectedSport}
+              <SpecialFieldForm
+                specialField={selectedSpecialField}
                 onSubmit={handleFormSubmit}
                 onClose={() => setIsFormOpen(false)}
               />
@@ -199,7 +200,7 @@ export default function TimeSlotPage() {
         isOpen={isConfirmDialogOpen}
         onConfirm={handleDelete}
         onClose={() => setIsConfirmDialogOpen(false)}
-        message="Are you sure you want to delete this sport?"
+        message="Are you sure you want to delete this special field?"
       />
     </div>
   );

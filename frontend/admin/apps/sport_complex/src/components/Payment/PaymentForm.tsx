@@ -17,7 +17,6 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
   payment,
   onSubmit,
   onClose,
-  
 }) => {
   const [formData, setFormData] = useState<Payment>({
     id: "",
@@ -81,38 +80,36 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
     setIsSubmitting(true);
 
     try {
-        // Ensure a file is selected
-        if (!paymentImage) {
-            throw new Error("Payment image is required.");
-        }
+      // Ensure a file is selected
+      if (!paymentImage) {
+        throw new Error("Payment image is required.");
+      }
 
-        const formDataToSend = new FormData();
+      const formDataToSend = new FormData();
 
-        // Append the file and other fields
-        formDataToSend.append("paymentImage", paymentImage);
-        formDataToSend.append("reservationId", formData.reservation.id);
-        formDataToSend.append("status", formData.status);
-        formDataToSend.append("dateTime", formData.dateTime);
+      // Append the file and other fields
+      formDataToSend.append("paymentImage", paymentImage);
+      formDataToSend.append("reservationId", formData.reservation.id);
+      formDataToSend.append("status", formData.status);
+      formDataToSend.append("dateTime", formData.dateTime);
 
-        console.log("Form Data to Send:", Array.from(formDataToSend.entries()));
+      console.log("Form Data to Send:", Array.from(formDataToSend.entries()));
 
-        await onSubmit(formDataToSend as unknown as Payment);
-        onClose();
+      await onSubmit(formDataToSend as unknown as Payment);
+      onClose();
     } catch (error) {
-        console.error(error);
-        handleAddAlert(
-            "XCircleIcon",
-            "Error",
-            error.message || "Failed to update payment. Please try again.",
-            tAlertType.ERROR
-        );
-        setError("Unable to update payment information. Please try again.");
+      console.error(error);
+      handleAddAlert(
+        "XCircleIcon",
+        "Error",
+        "Failed to update payment. Please try again.",
+        tAlertType.ERROR
+      );
+      setError("Unable to update payment information. Please try again.");
     } finally {
-        setIsSubmitting(false);
+      setIsSubmitting(false);
     }
-};
-
-  
+  };
 
   const handleChange = (
     event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -152,7 +149,7 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
 
       {/* Reservation ID */}
       <div className="space-y-2">
-        <label className="block text-gray-500 font-medium" >
+        <label className="block text-gray-500 font-medium">
           Reservation ID
         </label>
         <p className="p-2 border border-gray-300 rounded-lg">
@@ -175,8 +172,6 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
           {formData?.reservation?.field?.price || "N/A"}
         </p>
       </div>
-
-      
 
       <div className="space-y-2 mt-4">
         <label className="block text-gray-500 font-medium">DateTime</label>

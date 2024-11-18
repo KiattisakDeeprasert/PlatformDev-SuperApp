@@ -14,12 +14,15 @@ import { SpecialTable } from './schemas/special-table.schemas';
 import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { SpecialTableStatus } from './enums/special-table.enum';
-import { Timeslot } from 'src/time-slots/schemas/time-slots.schema';
 
 const POPULATE_PIPE = [
   {
-    path: 'name',
-    select: ['name.th', 'name.en'],
+    path: 'field',
+    select: ['field', 'name'],
+    populate: {
+      path: 'name',
+      select: ['name.en', 'name.th'],
+    },
   },
   {
     path: 'timeSlot',
@@ -148,9 +151,9 @@ export class SpecialTableService {
       console.error('Invalid end time provided for reset');
       throw new Error('Invalid timeSlotEnd');
     }
-  
+
     const delay = timeSlotEndDate.getTime() - Date.now();
-  
+
     if (delay > 0) {
       setTimeout(async () => {
         specialTable.userCurrent = 0;
@@ -161,7 +164,6 @@ export class SpecialTableService {
       console.warn('End time is in the past, no reset scheduled');
     }
   }
-  
 
   async update(
     id: string,

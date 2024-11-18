@@ -6,5 +6,5 @@ export interface FieldTimeSlot {
   id?: string;
   field: Field;
   timeSlot: Timeslot;
-  status: "free" | "reserve" |"in use";
+  status: "free" | "reserved" |"in use";
 }

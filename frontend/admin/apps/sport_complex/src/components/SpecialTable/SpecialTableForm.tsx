@@ -1,32 +1,40 @@
-
-
-import { FieldTimeSlot } from "@/utils/FieldTimeSlotTypes";
-import { Field } from "@/utils/FieldTypes";
+import { SpecialTable } from "@/utils/SpecialTableTypes";
+import { SpecialField } from "@/utils/SpecialFieldTypes";
 import { Timeslot } from "@/utils/TimeSlotTypes";
-import * as Icons from "@heroicons/react/24/outline";
 import Modal from "@shared/components/Modal";
 import { useGlobalContext } from "@shared/context/GlobalContext";
 import { tAlert, tAlertType } from "@shared/utils/types/Alert";
 import React, { useEffect, useState } from "react";
 import { GrFormClose } from "react-icons/gr";
 import { LiaCheckCircle } from "react-icons/lia";
-
-interface FieldTimeSlotFormProps {
-  fieldTimeSlot: FieldTimeSlot | null; // Pass null if creating a new slot
-  onSubmit: (formData: FieldTimeSlot) => Promise<void>;
+import * as Icons from "@heroicons/react/24/outline";
+interface SpecialTableFormProps {
+  specialTable: SpecialTable | null;
+  onSubmit: (formData: SpecialTable) => Promise<void>;
   onClose: () => void;
 }
 
-const FieldTimeSlotForm: React.FC<FieldTimeSlotFormProps> = ({ fieldTimeSlot, onSubmit, onClose }) => {
-  const [formData, setFormData] = useState<FieldTimeSlot>({
+const SpecialTableForm: React.FC<SpecialTableFormProps> = ({
+  specialTable,
+  onSubmit,
+  onClose,
+}) => {
+  const [formData, setFormData] = useState<SpecialTable>({
     id: "",
-    field: { id: "", capacity: 0,price: 0,status:"ready", type: { id: "", name: { th: "", en: "" } } },
+    field: {
+      id: "",
+      name: { en: "", th: "" },
+      specialfieldImage: "",
+      price: 0,
+    },
     timeSlot: { id: "", start: "", end: "" },
+    capacity: 1,
+    userCurrent: 0,
     status: "free",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [fields, setFields] = useState<Field[]>([]);
+  const [specialFields, setSpecialFields] = useState<SpecialField[]>([]);
   const [timeSlots, setTimeSlots] = useState<Timeslot[]>([]);
 
   const { addAlert } = useGlobalContext();
@@ -49,13 +57,15 @@ const FieldTimeSlotForm: React.FC<FieldTimeSlotFormProps> = ({ fieldTimeSlot, on
   };
 
   useEffect(() => {
-    async function fetchFields() {
+    async function fetchSpecialFields() {
       try {
-        const response = await fetch("http://localhost:8081/api/fields/");
+        const response = await fetch(
+          "http://localhost:8081/api/special-field/"
+        );
         const result = await response.json();
-        setFields(result.data);
+        setSpecialFields(result.data);
       } catch (error) {
-        console.error("Failed to fetch fields", error);
+        console.error("Failed to fetch special fields", error);
       }
     }
 
@@ -69,28 +79,37 @@ const FieldTimeSlotForm: React.FC<FieldTimeSlotFormProps> = ({ fieldTimeSlot, on
       }
     }
 
-    fetchFields();
+    fetchSpecialFields();
     fetchTimeSlots();
   }, []);
 
   useEffect(() => {
-    if (fieldTimeSlot) {
-      setFormData(fieldTimeSlot);
+    if (specialTable) {
+      setFormData(specialTable);
     }
-  }, [fieldTimeSlot]);
+  }, [specialTable]);
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     setIsSubmitting(true);
     setError(null);
 
-    
-    // ตรวจสอบว่า field และ timeSlot มีค่าอยู่หรือไม่
-    if (!formData.field.id || !formData.timeSlot.id) {
+    console.log("Submitting form with data:", formData);
+
+    const dataToSubmit = {
+      id: formData.id,
+      field: formData.field.id,
+      timeSlot: formData.timeSlot.id,
+      capacity: formData.capacity,
+      userCurrent: formData.userCurrent,
+      status: formData.status,
+    };
+
+    if (!dataToSubmit.field || !dataToSubmit.timeSlot) {
       handleAddAlert(
         "ExclamationCircleIcon",
-        "Field or Time Slot Missing",
-        "Both field and time slot are required.",
+        "Special Field and Time Slot are required.",
+        "Validate Form",
         tAlertType.WARNING
       );
       setIsSubmitting(false);
@@ -98,40 +117,44 @@ const FieldTimeSlotForm: React.FC<FieldTimeSlotFormProps> = ({ fieldTimeSlot, on
     }
 
     try {
-      const isEditing = !!formData.id; // ตรวจสอบว่ากำลังแก้ไขอยู่หรือไม่
-
-      // ส่งข้อมูลในรูปแบบที่เหมาะสม
-      await onSubmit({
-        id: isEditing ? formData.id : undefined,
-        field: formData.field.id,
-        timeSlot: formData.timeSlot.id,
-        status: formData.status,
-      });
-
+      await onSubmit(dataToSubmit); // Pass the simplified data to onSubmit
       setFormData({
         id: "",
-        field: { id: "", capacity: 0,price: 0,status:"ready", type: { id: "", name: { th: "", en: "" } } },
+        field: {
+          id: "",
+          name: { en: "", th: "" },
+          specialfieldImage: "",
+          price: 0,
+        },
         timeSlot: { id: "", start: "", end: "" },
+        capacity: 1,
+        userCurrent: 0,
         status: "free",
       });
-      onClose(); // ปิด modal หรือ dialog
+      onClose();
     } catch (error) {
       setError("Failed to submit. Please check the form inputs.");
-      console.log(error);
-      
+      console.error(error);
     } finally {
       setIsSubmitting(false);
     }
-};
+  };
 
-
-  const handleChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+  const handleChange = (
+    event: React.ChangeEvent<HTMLSelectElement | HTMLInputElement>
+  ) => {
     const { name, value } = event.target;
-    if (name === "field") {
-      const selectedField = fields.find((field) => field.id === value);
+
+    if (name === "specialField") {
+      const selectedField = specialFields.find((field) => field.id === value);
       setFormData({
         ...formData,
-        field: selectedField || { id: "", capacity: 0,price: 0,status:"ready",  type: { id: "", name: { th: "", en: "" } } },
+        field: selectedField || {
+          id: "",
+          name: { en: "", th: "" },
+          specialfieldImage: "",
+          price: 0,
+        },
       });
     } else if (name === "timeSlot") {
       const selectedTimeSlot = timeSlots.find((slot) => slot.id === value);
@@ -139,15 +162,17 @@ const FieldTimeSlotForm: React.FC<FieldTimeSlotFormProps> = ({ fieldTimeSlot, on
         ...formData,
         timeSlot: selectedTimeSlot || { id: "", start: "", end: "" },
       });
+    } else if (name === "capacity" || name === "userCurrent") {
+      setFormData({ ...formData, [name]: Number(value) });
     } else if (name === "status") {
-      setFormData({ ...formData, status: value as "free" | "reserved" | "in use" });
+      setFormData({ ...formData, status: value as "free" | "full" });
     }
   };
 
   return (
     <Modal
       isOpen={true}
-      title={fieldTimeSlot ? "Edit Field Time Slot" : "Create Field Time Slot"}
+      title={specialTable ? "Edit Special Table" : "Create Special Table"}
       onClose={onClose}
       actions={
         <div className="flex justify-between">
@@ -169,27 +194,27 @@ const FieldTimeSlotForm: React.FC<FieldTimeSlotFormProps> = ({ fieldTimeSlot, on
       {error && <p className="text-red-500">{error}</p>}
 
       <div className="space-y-2">
-        <label className="block font-medium text-gray-500 dark:text-gray-400">Select Field</label>
+        <label className="block font-medium text-gray-500">Special Field</label>
         <select
-          name="field"
+          name="specialField"
           value={formData.field.id || ""}
           onChange={handleChange}
           required
           className="w-full p-2 border border-gray-300 rounded-lg focus:ring focus:ring-blue-200 focus:border-blue-500"
         >
           <option value="" disabled>
-            Select a field
+            Select a Special Field
           </option>
-          {fields.map((field) => (
+          {specialFields.map((field) => (
             <option key={field.id} value={field.id}>
-              {field.type.name.en} - {field.type.name.th}
+              {field.name.en}
             </option>
           ))}
         </select>
       </div>
 
-      <div className="space-y-2 mt-3 mb-[-1rem]">
-        <label className="block font-medium text-gray-500 dark:text-gray-400">Select Time Slot</label>
+      <div className="space-y-2 mt-2">
+        <label className="block font-medium text-gray-500">Time Slot</label>
         <select
           name="timeSlot"
           value={formData.timeSlot.id || ""}
@@ -198,7 +223,7 @@ const FieldTimeSlotForm: React.FC<FieldTimeSlotFormProps> = ({ fieldTimeSlot, on
           className="w-full p-2 border border-gray-300 rounded-lg focus:ring focus:ring-blue-200 focus:border-blue-500"
         >
           <option value="" disabled>
-            Select a time slot
+            Select a Time Slot
           </option>
           {timeSlots.map((slot) => (
             <option key={slot.id} value={slot.id}>
@@ -208,24 +233,34 @@ const FieldTimeSlotForm: React.FC<FieldTimeSlotFormProps> = ({ fieldTimeSlot, on
         </select>
       </div>
 
-      {fieldTimeSlot && (
-        <div className="space-y-2 mt-5 mb-[-1rem]">
-          <label className="block font-medium text-gray-500 dark:text-gray-400">Status</label>
-          <select
-            name="status"
-            value={formData.status}
-            onChange={handleChange}
-            required
-            className="w-full p-2 border border-gray-300 rounded-lg focus:ring focus:ring-blue-200 focus:border-blue-500"
-          >
-            <option value="free">Free</option>
-            <option value="reserved">Reserved</option>
-            <option value="in use">In Use</option>
-          </select>
-        </div>
-      )}
+      <div className="space-y-2 mt-2">
+        <label className="block font-medium text-gray-500">Capacity</label>
+        <input
+          type="number"
+          name="capacity"
+          value={formData.capacity || ""}
+          onChange={handleChange}
+          required
+          min={1}
+          className="w-full p-2 border border-gray-300 rounded-lg focus:ring focus:ring-blue-200 focus:border-blue-500"
+        />
+      </div>
+
+      <div className="space-y-2 mt-2 mb-[-1rem]">
+        <label className="block font-medium text-gray-500">Status</label>
+        <select
+          name="status"
+          value={formData.status}
+          onChange={handleChange}
+          required
+          className="w-full p-2 border border-gray-300 rounded-lg focus:ring focus:ring-blue-200 focus:border-blue-500"
+        >
+          <option value="free">Free</option>
+          <option value="full">Full</option>
+        </select>
+      </div>
     </Modal>
   );
 };
 
-export default FieldTimeSlotForm;
+export default SpecialTableForm;
