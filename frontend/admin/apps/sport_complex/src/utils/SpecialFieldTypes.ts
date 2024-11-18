@@ -1,5 +1,5 @@
 export interface SpecialField {
-  id: string;
+  id?: string;
   name: {
     th: string;
     en: string;
