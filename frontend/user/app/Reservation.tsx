@@ -9,11 +9,12 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  ActivityIndicator,
 } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 
 export default function ReservationForm() {
-  const [userUsername, setUserUsername] = useState<string>(""); // เก็บค่าที่ผู้ใช้กรอก
+  const [userUsername, setUserUsername] = useState<string>(""); // Store the user input
   const [fieldId, setFieldId] = useState<string | null>(null);
   const [timeSlotId, setTimeSlotId] = useState<string | null>(null);
   const [fields, setFields] = useState<Field[]>([]);
@@ -53,7 +54,7 @@ export default function ReservationForm() {
     setLoading(true);
     try {
       const response = await apiClient.post("/reservations/", {
-        user: userUsername, // ส่งค่าที่กรอกในช่องนี้
+        user: userUsername,
         field: fieldId,
         timeSlot: timeSlotId,
       });
@@ -79,19 +80,20 @@ export default function ReservationForm() {
         onChangeText={setUserUsername}
         style={styles.input}
         placeholder="Enter Username"
+        placeholderTextColor="#888"
       />
 
-      <Text style={styles.label}>Select Filed</Text>
+      <Text style={styles.label}>Select Field</Text>
       <View style={styles.pickerContainer}>
         {fields.length === 0 ? (
-          <Text>Loading Fileds...</Text>
+          <ActivityIndicator size="small" color="#007BFF" />
         ) : (
           <Picker
             selectedValue={fieldId}
             onValueChange={setFieldId}
             style={styles.picker}
           >
-            <Picker.Item label="Select a Filed" value="" />
+            <Picker.Item label="Select a Field" value="" />
             {fields.map((field) => (
               <Picker.Item
                 key={field.id}
@@ -106,7 +108,7 @@ export default function ReservationForm() {
       <Text style={styles.label}>Select Time Slot</Text>
       <View style={styles.pickerContainer}>
         {timeSlots.length === 0 ? (
-          <Text>Loading Time Slots...</Text>
+          <ActivityIndicator size="small" color="#007BFF" />
         ) : (
           <Picker
             selectedValue={timeSlotId}
@@ -126,13 +128,15 @@ export default function ReservationForm() {
       </View>
 
       <TouchableOpacity
-        style={styles.button}
+        style={[styles.button, loading && styles.buttonLoading]}
         onPress={handleSubmit}
         disabled={loading}
       >
-        <Text style={styles.buttonText}>
-          {loading ? "Submitting..." : "Submit Reservation"}
-        </Text>
+        {loading ? (
+          <ActivityIndicator size="small" color="#fff" />
+        ) : (
+          <Text style={styles.buttonText}>Submit Reservation</Text>
+        )}
       </TouchableOpacity>
     </View>
   );
@@ -142,45 +146,60 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
-    backgroundColor: "#fff",
+    backgroundColor: "#f9f9f9",
   },
   title: {
-    fontSize: 24,
+    fontSize: 26,
     fontWeight: "bold",
     textAlign: "center",
     marginVertical: 20,
+    color: "#333",
   },
   label: {
     fontSize: 16,
-    fontWeight: "bold",
+    fontWeight: "600",
     marginBottom: 10,
+    color: "#555",
   },
   input: {
-    height: 40,
+    height: 45,
     borderColor: "#ccc",
     borderWidth: 1,
-    borderRadius: 5,
-    paddingLeft: 10,
+    borderRadius: 10,
+    paddingLeft: 15,
+    fontSize: 16,
+    backgroundColor: "#fff",
     marginBottom: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
   },
   pickerContainer: {
     marginBottom: 20,
-  },
-  picker: {
-    height: 40,
+    borderRadius: 10,
     borderColor: "#ccc",
     borderWidth: 1,
-    borderRadius: 5,
-    paddingLeft: 10,
+    backgroundColor: "#fff",
+    paddingLeft: 15,
+  },
+  picker: {
+    height: 45,
+    fontSize: 16,
   },
   button: {
     backgroundColor: "#007BFF",
-    padding: 15,
-    borderRadius: 5,
+    paddingVertical: 15,
+    borderRadius: 10,
     alignItems: "center",
+    marginTop: 20,
+  },
+  buttonLoading: {
+    backgroundColor: "#0056b3",
   },
   buttonText: {
     color: "#fff",
     fontSize: 16,
+    fontWeight: "600",
   },
 });

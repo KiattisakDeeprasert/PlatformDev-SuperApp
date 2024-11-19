@@ -105,7 +105,7 @@ export default function FieldTimeslotPage() {
 
       {/* Navigation Button */}
       <TouchableOpacity style={styles.button} onPress={navigateToNextPage}>
-        <Text style={styles.buttonText}>Go to Next Page</Text>
+        <Text style={styles.buttonText}>Go to Reservation</Text>
       </TouchableOpacity>
     </View>
   );

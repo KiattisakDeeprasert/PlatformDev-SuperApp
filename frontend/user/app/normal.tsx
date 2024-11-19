@@ -1,7 +1,7 @@
 import { Sport } from "@/utils/api/sport_complex/interface/sport";
 import apiClient from "@/utils/api/sport_complex/sportApi/apiClient";
 import { useState, useEffect } from "react";
-import { View, Text, TouchableOpacity, FlatList, Image } from "react-native";
+import { View, Text, TouchableOpacity, FlatList, Image, StyleSheet } from "react-native";
 import { useRouter } from "expo-router"; // Import the router for expo-router
 
 export default function NormalPage() {
@@ -55,54 +55,28 @@ export default function NormalPage() {
   console.log(sports); // Log sports data to inspect its structure
 
   return (
-    <View style={{ flex: 1, padding: 10 }}>
-      <Text style={{ fontSize: 24, fontWeight: "bold" }}>Sports List</Text>
+    <View style={styles.container}>
+      <Text style={styles.title}>Sports List</Text>
 
-      {/* ใช้ FlatList เพื่อแสดงรายการกีฬา */}
       <FlatList
         data={sports}
-        keyExtractor={(item) => item.id.toString()} // ใช้ id ของแต่ละรายการเป็น key
+        keyExtractor={(item) => item.id.toString()}
         renderItem={({ item }) => (
           <TouchableOpacity onPress={() => router.push(`/fieldTimeslot`)}>
-            {/* เมื่อคลิกจะไปที่หน้ารายละเอียดของกีฬา */}
-            <View
-              style={{
-                marginBottom: 10,
-                padding: 10,
-                borderWidth: 1,
-                borderRadius: 10,
-              }}
-            >
-              {/* แสดงภาพกีฬา ถ้ามี */}
+            <View style={styles.card}>
               {item.sportImage ? (
                 <Image
                   source={{ uri: item.sportImage }}
-                  style={{ width: 100, height: 100, borderRadius: 10 }}
+                  style={styles.cardImage}
                 />
               ) : (
-                <Text>No Image Available</Text> // ถ้าไม่มีภาพแสดงข้อความนี้
+                <Text style={styles.noImageText}>No Image Available</Text>
               )}
 
-              {/* แสดงชื่อกีฬา ภาษาอังกฤษ */}
-              <Text
-                style={{ marginTop: 10, textAlign: "center", fontSize: 16 }}
-              >
-                {item?.name?.en || "No name available"}{" "}
-                {/* ใช้ fallback ถ้าชื่อภาษาอังกฤษไม่มี */}
-              </Text>
+              <Text style={styles.cardTitle}>{item?.name?.en || "No name available"}</Text>
 
-              {/* แสดงชื่อกีฬา ภาษาไทย ถ้ามี */}
               {item?.name?.th && (
-                <Text
-                  style={{
-                    marginTop: 5,
-                    textAlign: "center",
-                    fontSize: 14,
-                    color: "gray",
-                  }}
-                >
-                  {item.name.th} {/* แสดงชื่อภาษาไทย */}
-                </Text>
+                <Text style={styles.cardSubtitle}>{item.name.th}</Text>
               )}
             </View>
           </TouchableOpacity>
@@ -111,3 +85,56 @@ export default function NormalPage() {
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    padding: 20,
+    backgroundColor: "#f4f4f4", // Background color for the screen
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: "bold",
+    textAlign: "center",
+    marginBottom: 20,
+    color: "#333", // Title color
+  },
+  card: {
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    padding: 15,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: "#ddd",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 5, // Adds shadow on Android
+  },
+  cardImage: {
+    width: "100%",
+    height: 150,
+    borderRadius: 10,
+    resizeMode: "cover", // Make sure the image fits the container well
+  },
+  noImageText: {
+    textAlign: "center",
+    color: "#888",
+    fontStyle: "italic",
+    marginTop: 10,
+  },
+  cardTitle: {
+    fontSize: 18,
+    fontWeight: "600",
+    textAlign: "center",
+    marginTop: 10,
+    color: "#333",
+  },
+  cardSubtitle: {
+    fontSize: 14,
+    textAlign: "center",
+    marginTop: 5,
+    color: "#777",
+  },
+});

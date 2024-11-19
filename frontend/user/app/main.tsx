@@ -1,16 +1,11 @@
-import Entypo from "@expo/vector-icons/Entypo";
-import FontAwesome from "@expo/vector-icons/FontAwesome";
-import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
-import { createMaterialTopTabNavigator } from "@react-navigation/material-top-tabs";
 import React from "react";
-import NormalPage from "./normal";
-
+import { createMaterialTopTabNavigator } from "@react-navigation/material-top-tabs";
 const Tab = createMaterialTopTabNavigator();
 
 export default function Main() {
   return (
     <Tab.Navigator
-      initialRouteName="Book"
+      initialRouteName="Normal"
       screenOptions={{
         tabBarActiveTintColor: "#FFFFFF",
         tabBarInactiveTintColor: "#000000",
@@ -29,37 +24,6 @@ export default function Main() {
           marginRight: 1,
         },
       }}
-    >
-      <Tab.Screen
-        name="Normal"
-        component={NormalPage}
-        options={{
-          tabBarLabel: "Normal",
-          tabBarIcon: ({ color }) => (
-            <Entypo name="normal" size={24} color={color} />
-          ),
-        }}
-      />
-      <Tab.Screen
-        name="RoomReservation"
-        component={PaymentPage}
-        options={{
-          tabBarLabel: "Room",
-          tabBarIcon: ({ color }) => (
-            <FontAwesome name="table" size={24} color={color} />
-          ),
-        }}
-      />
-      <Tab.Screen
-        name="Profile"
-        component={ProfilePage}
-        options={{
-          tabBarLabel: "Profile",
-          tabBarIcon: ({ color }) => (
-            <FontAwesome5 name="user-graduate" size={24} color={color} />
-          ),
-        }}
-      />
-    </Tab.Navigator>
+    ></Tab.Navigator>
   );
 }
