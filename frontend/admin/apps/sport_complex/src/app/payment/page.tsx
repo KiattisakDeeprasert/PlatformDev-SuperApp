@@ -29,7 +29,7 @@ export default function PaymentPage() {
   const { addAlert } = useGlobalContext();
   const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [paymentToDelete, setPaymentToDelete] = useState<Payment | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
 
   const handleCloseModal = () => {
     setSelectedPayment(null);
@@ -144,7 +144,14 @@ export default function PaymentPage() {
     setSelectedPayment(payment);
     setIsModalOpen(true);
   };
-
+  const filteredPayments = payments.filter((payment) => {
+    return (
+      payment.reservation?.user?.username
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase()) ||
+      payment.reservation?.field?.price.toString().includes(searchTerm)
+    );
+  });
   // Loading state
   if (loading) {
     return <div>Loading payments...</div>;
@@ -155,6 +162,13 @@ export default function PaymentPage() {
       <div className="container mx-auto">
         <div className="flex justify-between items-center mb-4 px-4 border-b-2">
           <h1 className="text-3xl font-bold mb-6">Payment Management</h1>
+          <input
+            type="text"
+            placeholder="Search "
+            className="px-4 py-2 border rounded-md"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
         </div>
 
         {/* Table to display payments */}
